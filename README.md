@@ -1,12 +1,13 @@
 # About
 This project is a showcase of my UE4 learning progress.
+Binary assets are stored in git LFS so initializing it when cloning is required.
+None of the models/textures/sounds/level design is made by me. All assets and code are provided only for demonstration purposes. Everything (except for the demo level) that is **not** mentioned below is made by me.
 
 ## Content
 There are 2 main maps: 
 1. Demo map which contains various movement mechanics, interactable items, weapons and basic AI
 2. CardboardCity which contains quest system and advanced NPC lifecycle demonstration. This level is a continuation of Autumn 2021 Siberian GameJam submission: https://aluminum-cockroachs.itch.io/murphyslaw which was mostly based on my code base
 
-None of the models/textures/sounds/level design is made by me. Everything that is **not** mentioned below is made by me.
 
 Thanks to all these people for providing following assets
 ### Characters:
