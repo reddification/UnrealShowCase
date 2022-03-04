@@ -1,0 +1,11 @@
+#pragma once
+#include "NpcActivityTypes.h"
+
+DECLARE_DELEGATE_OneParam(FNpcActivityLatentActionStateChangedEvent, ENpcActivityLatentActionState State);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FNpcInteractionStateChangedEvent, class ANpcBaseInteractiveActor* InteractiveActor,
+	class ABaseCharacter* Character, ENpcActivityLatentActionState State);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FNpcActivityStateChangedEvent, const class UNpcActivityInstanceBase* ActivityIntance, bool bActive);
+// DECLARE_DELEGATE_TwoParams(FNpcActivityUtilityChangedEvent, const FName& BlackboardUtilityKey, float NewUtilityValue);
+DECLARE_DELEGATE_OneParam(FNpcActivityEvent, EActivityEventType UtilityChange);
+DECLARE_DELEGATE_OneParam(FNpcActivityEnergyChangedEvent, float EnergyChange);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FInteractionAvailableStateChangedEvent, AActor* InteractiveActor, bool bActive);
