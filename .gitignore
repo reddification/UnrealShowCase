@@ -46,8 +46,19 @@ SourceArt/**/*.png
 SourceArt/**/*.tga
 
 # Binary Files
+
+*.pdb
+
 Binaries/*
-Plugins/*/Binaries/*
+!Binaries/Win64/
+
+Binaries/Win64/*
+!/Binaries/Win64/AlumCockSGJEditor.target
+!/Binaries/Win64/UE4Editor.modules
+!/Binaries/Win64/UE4Editor-AlumCockSGJ.dll
+!/Binaries/Win64/UE4Editor-AlumCockSGJ.pdb
+
+#Plugins/FMODStudio/Binaries/*
 
 # Builds
 Build/*
@@ -69,6 +80,35 @@ Saved/*
 # Compiled source files for the engine to use
 Intermediate/*
 Plugins/*/Intermediate/*
+Plugins/*/Binaries/*/**
+#Plugins/FMODStudio/*/**
+#Plugins/*/*/**
+
+!/Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin.dll
+!/Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin.pdb
+!/Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor.modules
+
+
+!/Plugins/FMODStudio/Binaries/Win64/*.dll
+!/Plugins/FMODStudio/Binaries/Win64/*.lib
+!/Plugins/FMODStudio/Binaries/Win64/*.pdb
+/Plugins/FMODStudio/Binaries/Win64/*debug*.dll
+/Plugins/FMODStudio/Binaries/Win64/*debug*.pdb
 
 # Cache files for the editor to use
 DerivedDataCache/*
+.idea/.idea.AlumCockSGJ/.idea/encodings.xml
+.idea/.idea.AlumCockSGJ/.idea/indexLayout.xml
+.idea/.idea.AlumCockSGJ/.idea/projectSettingsUpdater.xml
+.idea/.idea.AlumCockSGJ/.idea/vcs.xml
+.idea/vcs.xml
+.idea/.name
+.idea/workspace.xml
+Content/GameCode/Core/Characters/Player/BP_PlayerCharacter.uasset
+.idea/.idea.AlumCockSGJ/.idea/.name
+Plugins/BTUtilityPlugin/Examples/Example1.png
+Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin-Win64-DebugGame.pdb
+Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-Win64-DebugGame.modules
+Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin-0001.pdb
+Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin-0001.pdb
+.idea/.idea.AlumCockSGJ/.idea/workspace.xml
