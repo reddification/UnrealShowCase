@@ -1,2 +1,27 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.fbx filter=lfs -diff merge=lfs -text
+*.obj filter=lfs -diff merge=lfs -text
+*.blend filter=lfs -diff merge=lfs -text
+*.png filter=lfs -diff merge=lfs -text
+*.jpg filter=lfs -diff merge=lfs -text
+*.jpeg filter=lfs -diff merge=lfs -text
+*.hdr filter=lfs -diff merge=lfs -text
+*.exr filter=lfs -diff merge=lfs -text
+*.mp3 filter=lfs -diff merge=lfs -text
+*.wav filter=lfs -diff merge=lfs -text
+*.mp4 filter=lfs -diff merge=lfs -text
+*.mov filter=lfs -diff merge=lfs -text
+*.psd filter=lfs -diff merge=lfs -text
+*.mb filter=lfs -diff merge=lfs -text
+*.tga filter=lfs -diff merge=lfs -text
+*.cubemap filter=lfs -diff merge=lfs -text
+*.tif filter=lfs -diff merge=lfs -text
+*.duf filter=lfs -diff merge=lfs -text
+*.uasset filter=lfs -diff merge=binary -text
+*.umap filter=lfs -diff merge=binary -text
+*.upk filter=lfs -diff merge=lfs -text
+*.udk filter=lfs -diff merge=lfs -text
+*.dll filter=lfs -diff merge=binary -text
+*.pdb filter=lfs -diff merge=binary -text
+*.exe filter=lfs -diff merge=binary -text
