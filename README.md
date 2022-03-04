@@ -1,5 +1,6 @@
 # About
 This project is a showcase of my UE4 learning progress.
+Binary assets are stored in git LFS so initializing it when cloning is required
 
 ## Content
 There are 2 main maps: 
