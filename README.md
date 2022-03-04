@@ -7,7 +7,7 @@ There are 2 main maps:
 1. Demo map which contains various movement mechanics, interactable items, weapons and basic AI
 2. CardboardCity which contains quest system and advanced NPC lifecycle demonstration. This level is a continuation of Autumn 2021 Siberian GameJam submission: https://aluminum-cockroachs.itch.io/murphyslaw which was mostly based on my code base
 
-None of the models/textures/sounds/level design is made by me. Everything that is **not** mentioned below is made by me.
+None of the models/textures/sounds/level design is made by me. All assets and code are provided only for demonstration purposes. Everything that is **not** mentioned below is made by me.
 
 Thanks to all these people for providing following assets
 ### Characters:
