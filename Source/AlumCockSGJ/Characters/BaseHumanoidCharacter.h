@@ -14,7 +14,6 @@
 #include "Data/MontagePlayResult.h"
 #include "Components/Movement/HumanoidCharacterMovementComponent.h"
 #include "Data/DataAssets/Characters/HumanoidCharacterDataAsset.h"
-#include "GameFramework/Character.h"
 #include "Interfaces/Soakable.h"
 #include "BaseHumanoidCharacter.generated.h"
 

@@ -30,7 +30,6 @@ void UQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UQuestSubsystem::OnItemPickedUp(const UInventoryComponent* InventoryComponent,
 	const FDataTableRowHandle& ItemDTRH, const FDataTableRowHandle& CharacterDTRH)
 {
-	GEngine->AddOnScreenDebugMessage(10, 5, FColor::Emerald, FString::Printf(TEXT("Picked up %s"), *ItemDTRH.ToDebugString()));
 	TArray<FQuestProgress> QuestsToComplete;
 	for (auto& QuestProgress : ActiveQuests)
 	{
@@ -58,7 +57,6 @@ void UQuestSubsystem::OnItemPickedUp(const UInventoryComponent* InventoryCompone
 
 void UQuestSubsystem::OnLocationReached(const FDataTableRowHandle& LocationDTRH, const FDataTableRowHandle& CharacterDTRH)
 {
-	GEngine->AddOnScreenDebugMessage(20, 5, FColor::Emerald, FString::Printf(TEXT("Reached location %s"), *LocationDTRH.ToDebugString()));
 	TArray<FQuestProgress> QuestsToComplete;
 	for (auto& QuestProgress : ActiveQuests)
 	{
@@ -90,7 +88,6 @@ void UQuestSubsystem::OnLocationReached(const FDataTableRowHandle& LocationDTRH,
 
 void UQuestSubsystem::OnNpcKilled(const AActor* NPC)
 {
-	GEngine->AddOnScreenDebugMessage(30, 5, FColor::Emerald, FString::Printf(TEXT("NPC killed %s"), *NPC->GetName()));
 	TArray<FQuestProgress> QuestsToComplete;
 	for (auto& QuestProgress : ActiveQuests)
 	{
@@ -119,8 +116,6 @@ void UQuestSubsystem::OnNpcKilled(const AActor* NPC)
 
 void UQuestSubsystem::OnActorInteracted(AActor* InteractiveQuestActor, const FDataTableRowHandle& CharacterDTRH)
 {
-	GEngine->AddOnScreenDebugMessage(80, 5, FColor::Emerald,
-		FString::Printf(TEXT("Interacted with quest actor %s"), *InteractiveQuestActor->GetName()));
 	TArray<FQuestProgress> QuestsToComplete;
 	for (auto& QuestProgress : ActiveQuests)
 	{
@@ -214,8 +209,6 @@ void UQuestSubsystem::CompleteQuests(const TArray<FQuestProgress>& QuestsToCompl
 {
 	for (const auto& CompletedQuest : QuestsToComplete)
 	{
-		GEngine->AddOnScreenDebugMessage(12, 5, FColor::Emerald,
-			FString::Printf(TEXT("Completed quest %s"), *CompletedQuest.QuestDTRH.ToDebugString()));
 		CompletedQuests.Add(CompletedQuest);
 		ActiveQuests.Remove(CompletedQuest);
 
@@ -236,9 +229,6 @@ void UQuestSubsystem::CompleteQuestTasks(FQuestProgress& QuestProgress, TArray<F
 {
 	for (const auto& CompletedQuestTaskInfo : CompletedQuestTasks)
 	{
-		GEngine->AddOnScreenDebugMessage(11, 5, FColor::Emerald,
-		FString::Printf(TEXT("Completed quest event %s"), *CompletedQuestTaskInfo.QuestTaskDTRH.ToDebugString()));
-
 		if (bCovered)
 			QuestProgress.CoveredQuestsTasks.Add(CompletedQuestTaskInfo);
 		else 
@@ -301,23 +291,14 @@ bool UQuestSubsystem::IsQuestTaskCompletable(const FQuestTaskInfo& QuestTaskInfo
 void UQuestSubsystem::AddQuest(const FDataTableRowHandle& QuestDTRH)
 {
 	if (!CanStartQuest(QuestDTRH))
-	{
-		GEngine->AddOnScreenDebugMessage(50, 5, FColor::Emerald,
-			FString::Printf(TEXT("Can't start quest %s"), *QuestDTRH.ToDebugString()));
 		return;
-	}
 	
 	FQuestDTR* QuestDTR = QuestDTRH.DataTable->FindRow<FQuestDTR>(QuestDTRH.RowName, "");
 	InitializeQuest(QuestDTRH, QuestDTR);
-	// TODO move to GameInstance or somewhere
 	ExecuteQuestTaskActions(QuestDTR->BeginQuestActions);
 	
 	if (QuestStartedEvent.IsBound())
-	{
 		QuestStartedEvent.Broadcast(QuestDTR);
-	}
-	
-	GEngine->AddOnScreenDebugMessage(40, 5, FColor::Emerald, FString::Printf(TEXT("Quest added %s"), *QuestDTRH.ToDebugString()));
 }
 
 void UQuestSubsystem::InitializeQuest(const FDataTableRowHandle& QuestDTRH, const FQuestDTR* QuestDTR)

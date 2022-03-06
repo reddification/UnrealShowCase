@@ -55,6 +55,7 @@ void UBTService_EnemyBehavior::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 bool UBTService_EnemyBehavior::IsSensingDamage(AAIController* AIController, UAIPerceptionComponent* PerceptionComponent, UBlackboardComponent* BlackboardComponent,
 	UBTService_EnemyBehavior::FBTSeviceMemory* ServiceMemory, UObject* CurrentTarget, EAICombatReason CurrentCombatMode)
 {
+	ABaseCharacter* ControlledCharacter = Cast<ABaseCharacter>(AIController->GetPawn());
 	ABaseCharacter* TargetCharacter = nullptr;
 	float MaxReceivedDamage = 0.f;
 	const FAISenseID SenseID = UAISense::GetSenseID(UAISense_Damage::StaticClass());
@@ -66,8 +67,11 @@ bool UBTService_EnemyBehavior::IsSensingDamage(AAIController* AIController, UAIP
 			if (DataIt->Value.Target.IsValid())
 			{
 				ABaseCharacter* DamagingCharacter = Cast<ABaseCharacter>(DataIt->Value.Target);
-				if (!DamagingCharacter || !DamagingCharacter->IsAlive() || IgnoreTarget(DamagingCharacter))
+				if (!DamagingCharacter || !DamagingCharacter->IsAlive() || IgnoreTarget(DamagingCharacter)
+					|| (!bIgnoreTeamDamage && ControlledCharacter->GetTeam() == DamagingCharacter->GetTeam()))
+				{
 					continue;
+				}
 				
 				float CurrentDamage = DataIt->Value.LastSensedStimuli[SenseID].Strength;
 				if (CurrentDamage > MaxReceivedDamage)

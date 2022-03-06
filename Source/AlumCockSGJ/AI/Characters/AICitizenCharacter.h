@@ -11,7 +11,6 @@
 
 class UNpcBehaviorSettings;
 
-// TODO inherit from ABaseNpc instead. refactor ABaseHumanoidCharacter to reduce character dependencies from components as much as possible
 UCLASS()
 class ALUMCOCKSGJ_API AAICitizenCharacter : public ABaseHumanoidCharacter, public IInteractable, public INpcCharacter,
 	public IDatatableInitializablePawn

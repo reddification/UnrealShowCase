@@ -48,9 +48,7 @@ bool UBarrelComponent::ShootHitScan(const FVector& ViewLocation, const FVector& 
     FCollisionQueryParams CollisionQueryParams;
     CollisionQueryParams.AddIgnoredActor(GetOwner());
     CollisionQueryParams.AddIgnoredActor(GetOwner()->GetOwner());
-    
-    ABasePlayerController* PlayerController = Cast<ABasePlayerController>(GEngine->GetFirstLocalPlayerController(GetWorld()));
-    PlayerController->GetPlayerHUDWidget()->OnPlayerShoot(2.0);
+
     bool bHit = World->LineTraceSingleByChannel(ShotResult, ViewLocation, ProjectileEndLocation, ECC_Bullet, CollisionQueryParams);
     // TODO DotProduct doesnt really solve the problem of shooting behind players back. Need to fix one day
     if (bHit && FVector::DotProduct(Direction, ShotResult.ImpactPoint - ProjectileStartLocation) > 0.f)

@@ -36,6 +36,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FGameplayTagQuery IgnoreActorsWithTag;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIgnoreTeamDamage = false;
+	
 private:
 	bool IsSensingDamage(AAIController* AIController, UAIPerceptionComponent* PerceptionComponent, UBlackboardComponent* BlackboardComponent,
 						 FBTSeviceMemory* ServiceMemory, UObject* CurrentTarget, EAICombatReason CurrentCombatMode);
