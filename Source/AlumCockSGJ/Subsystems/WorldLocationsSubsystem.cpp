@@ -62,8 +62,6 @@ AQuestLocation* UWorldLocationsSubsystem::GetWorldLocation(const FDataTableRowHa
 			return QuestLocation;
 	}
 
-	GEngine->AddOnScreenDebugMessage(90, 5, FColor::Emerald,
-	FString::Printf(TEXT("Can't find quest location %s"), *QuestLocationDTRH.ToDebugString()));
 	return nullptr;
 }
 

@@ -4,6 +4,7 @@
 #include "CommonConstants.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/BaseHumanoidCharacter.h"
+#include "Characters/Controllers/BasePlayerController.h"
 #include "Components/Combat/CharacterCombatComponent.h"
 #include "Components/Combat/WeaponBarrelComponent.h"
 #include "Data/DataAssets/Items/RangeWeaponSettings.h"
@@ -153,9 +154,12 @@ bool ARangeWeaponItem::Shoot()
         SetAmmo(Ammo - 1);
 
     PlayAnimMontage(WeaponBarrelSettings->WeaponShootMontage);
-    auto PlayerController = Cast<APlayerController>(CachedShooterController);
+    auto PlayerController = Cast<ABasePlayerController>(CachedShooterController);
     if (PlayerController)
+    {
         PlayerController->PlayerCameraManager->StartCameraShake(CamShake);
+        PlayerController->GetPlayerHUDWidget()->OnPlayerShoot(2.0);
+    }
     
     ActiveWeaponBarrel->FinalizeShot();
     if (ShootEvent.IsBound())
