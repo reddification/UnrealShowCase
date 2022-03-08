@@ -48,6 +48,11 @@ void ARangeWeaponItem::BeginPlay()
 
 bool ARangeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* EquipmentComponent, const FPickUpItemData& PickUpItemData)
 {
+    auto DesignatedSlot = ItemSettings->DesignatedSlot;
+    auto ExistingItem = EquipmentComponent->Loadout[(uint8)DesignatedSlot];
+    if (IsValid(ExistingItem))
+        EquipmentComponent->DropWeapon(ItemSettings->DesignatedSlot, PickUpItemData.PickUpLocation);
+    
 	bool bAdded = Super::TryAddToEquipment(EquipmentComponent, PickUpItemData);
 	if (!bAdded)
 		return false;
@@ -55,7 +60,8 @@ bool ARangeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* Equipment
     EquipmentComponent->CharacterOwner->GetCombatComponent()->OnWeaponPickedUp(this);
     if (PickUpItemData.bDropped)
         SetAmmo(PickUpItemData.InitialAmmo);
-    
+
+    EquipmentComponent->Loadout[(uint8)DesignatedSlot] = this;
     AmmoChangedEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnAmmoChanged);
     OutOfAmmoEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnOutOfAmmo);
     if (EquipmentComponent->EquipmentSettings->bAutoEquipNewItem || ItemSettings->DesignatedSlot == EquipmentComponent->EquippedSlot)
@@ -84,7 +90,7 @@ void ARangeWeaponItem::OnUnequipped(UCharacterEquipmentComponent* CharacterEquip
     CharacterEquipmentComponent->EquippedRangedWeapon.Reset();
 }
 
-void ARangeWeaponItem::OnDropped(APickableEquipmentItem* PickableEquipmentItem)
+void ARangeWeaponItem::OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem)
 {
     PickableEquipmentItem->SetDroppedState(GetAmmo());
 }
@@ -130,8 +136,6 @@ bool ARangeWeaponItem::Shoot()
         if (IsValid(NoAmmoSFX))
         {
             PlayFmodEvent(NoAmmoSFX);
-            // UFMODBlueprintStatics::PlayEventAttached(NoAmmoSFX, ActiveWeaponBarrel.Get(), NAME_None, FVector::ZeroVector,
-            //     EAttachLocation::KeepRelativeOffset, true, true, true);
         }
 
         if (!bReloading)

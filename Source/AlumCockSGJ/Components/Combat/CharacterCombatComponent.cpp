@@ -13,23 +13,18 @@ void UCharacterCombatComponent::BeginPlay()
 	CharacterOwner = Cast<ABaseCharacter>(GetOwner());
 }
 
-bool UCharacterCombatComponent::StartAiming()
+void UCharacterCombatComponent::StartAiming()
 {
 	auto EquippedRangedWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentRangeWeapon();
 	if (!IsValid(EquippedRangedWeapon) || !EquippedRangedWeapon->CanAim() || !CharacterOwner->CanStartAction(ECharacterAction::Aim))
-	{
-		return false;
-	}
+		return;
 
 	EquippedRangedWeapon->StartAiming();
 	if (AimStateChangedEvent.IsBound())
-	{
 		AimStateChangedEvent.Broadcast(true, EquippedRangedWeapon);
-	}
 
 	bAiming = true;
 	CharacterOwner->OnActionStarted(ECharacterAction::Aim);
-	return true;
 }
 
 void UCharacterCombatComponent::StopAiming()
@@ -37,25 +32,20 @@ void UCharacterCombatComponent::StopAiming()
 	auto EquippedRangedWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentRangeWeapon();
 	CharacterOwner->OnActionEnded(ECharacterAction::Aim);
 	if (!bAiming)
-	{
 		return;
-	}
 	
 	bAiming = false;
 	if (!IsValid(EquippedRangedWeapon))
-	{
 		return;
-	}
 
 	EquippedRangedWeapon->StopAiming();
 	if (AimStateChangedEvent.IsBound())
-	{
 		AimStateChangedEvent.Broadcast(false, EquippedRangedWeapon);
-	}
 }
 
-void UCharacterCombatComponent::StartShooting(AController* Controller) const
+void UCharacterCombatComponent::StartFiring()
 {
+	auto Controller = CharacterOwner->GetController();
 	auto EquippedRangedWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentRangeWeapon();
 	if (IsValid(EquippedRangedWeapon) && CharacterOwner->CanStartAction(ECharacterAction::Shoot))
 	{
@@ -67,7 +57,7 @@ void UCharacterCombatComponent::StartShooting(AController* Controller) const
 	}
 }
 
-void UCharacterCombatComponent::StopFiring() const
+void UCharacterCombatComponent::StopFiring()
 {
 	auto EquippedRangedWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentRangeWeapon();
 	if (IsValid(EquippedRangedWeapon) && EquippedRangedWeapon->IsFiring())
@@ -90,12 +80,10 @@ bool UCharacterCombatComponent::CanThrow() const
 		: false;
 }
 
-bool UCharacterCombatComponent::TryThrow()
+void UCharacterCombatComponent::TryThrow()
 {
 	if (bThrowing || !CharacterOwner->CanStartAction(ECharacterAction::ThrowItem) || !CanThrow())
-	{
-		return false;
-	}
+		return;
 	
 	bThrowing = true;
 	CharacterOwner->OnActionStarted(ECharacterAction::ThrowItem);
@@ -112,8 +100,6 @@ bool UCharacterCombatComponent::TryThrow()
 		GetWorld()->GetTimerManager().SetTimer(ThrowTimer, this, &UCharacterCombatComponent::ReleaseThrowableItem,
 			ActiveThrowable->GetThrowDuration());
 	}
-	
-	return true;
 }
 
 void UCharacterCombatComponent::GrabThrowableItem()
@@ -170,8 +156,9 @@ void UCharacterCombatComponent::ReleaseThrowableItem()
 	CharacterOwner->OnActionEnded(ECharacterAction::ThrowItem);
 }
 
-void UCharacterCombatComponent::StartPrimaryMeleeAttack(AController* AttackerController)
+void UCharacterCombatComponent::StartPrimaryMeleeAttack()
 {
+	auto AttackerController = CharacterOwner->GetController();
 	StartMeleeAttack(EMeleeAttackType::Primary, AttackerController);
 }
 
@@ -180,8 +167,9 @@ void UCharacterCombatComponent::StopPrimaryMeleeAttack()
 	StopMeleeAttack(EMeleeAttackType::Primary);
 }
 
-void UCharacterCombatComponent::StartHeavyMeleeAttack(AController* AttackerController)
+void UCharacterCombatComponent::StartHeavyMeleeAttack()
 {
+	auto AttackerController = CharacterOwner->GetController();
 	StartMeleeAttack(EMeleeAttackType::Secondary, AttackerController);
 }
 

@@ -113,8 +113,7 @@ void ABasePlayerController::SetupInputComponent()
     InputComponent->BindAxis("SwimRight", this, &ABasePlayerController::SwimRight);
     InputComponent->BindAxis("SwimUp", this, &ABasePlayerController ::SwimUp);
 
-    InputComponent->BindAxis("ClimbUp", this, &ABasePlayerController::ClimbUp);
-    InputComponent->BindAxis("ClimbDown", this, &ABasePlayerController::ClimbDown);
+    InputComponent->BindAxis("Climb", this, &ABasePlayerController::Climb);
 
     InputComponent->BindAction("Interact", IE_Pressed, this, &ABasePlayerController::Interact);
 
@@ -158,23 +157,22 @@ void ABasePlayerController::SetupInputComponent()
     InputComponent->BindAction("JournalOpen", EInputEvent::IE_Pressed, this, &ABasePlayerController::OnJournalOpen);
     
     InputComponent->BindAction("SkipDialogue", EInputEvent::IE_Pressed, this, &ABasePlayerController::SkipDialogueLine);
+    
+    InputComponent->BindAction("UnequipWeapon", IE_Pressed, this, &ABasePlayerController::UnequipWeapon);
+    InputComponent->BindAction("EquipPrimaryWeapon", IE_Pressed, this, &ABasePlayerController::EquipPrimaryWeapon);
+    InputComponent->BindAction("EquipSecondaryWeapon", IE_Pressed, this, &ABasePlayerController::EquipSecondaryWeapon);
+    InputComponent->BindAction("EquipMeleeWeapon", IE_Pressed, this, &ABasePlayerController::EquipMeleeWeapon);
+    InputComponent->BindAction("EquipPrimaryThrowable", IE_Pressed, this, &ABasePlayerController::EquipPrimaryThrowable);
+    InputComponent->BindAction("EquipSecondaryThrowable", IE_Pressed, this, &ABasePlayerController::EquipSecondaryThrowable);
 }
 
 #pragma region CLIMBING
 
-void ABasePlayerController::ClimbDown(float Value)
+void ABasePlayerController::Climb(float Value)
 {
     if (IsValid(PlayerCharacter) && bCharacterInputEnabled)
     {
-        PlayerCharacter->ClimbDown(Value);
-    }
-}
-
-void ABasePlayerController::ClimbUp(float Value)
-{
-    if (IsValid(PlayerCharacter) && bCharacterInputEnabled)
-    {
-        PlayerCharacter->ClimbUp(Value);
+        PlayerCharacter->Climb(Value);
     }
 }
 
@@ -458,6 +456,42 @@ void ABasePlayerController::StopFiring()
     }
 }
 
+void ABasePlayerController::UnequipWeapon()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetEquipmentComponent()->UnequipItem();
+}
+
+void ABasePlayerController::EquipPrimaryWeapon()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetEquipmentComponent()->EquipPrimaryWeapon();
+}
+
+void ABasePlayerController::EquipSecondaryWeapon()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetEquipmentComponent()->EquipSecondaryWeapon();
+}
+
+void ABasePlayerController::EquipMeleeWeapon()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetEquipmentComponent()->EquipMeleeWeapon();
+}
+
+void ABasePlayerController::EquipPrimaryThrowable()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetEquipmentComponent()->EquipPrimaryThrowable();
+}
+
+void ABasePlayerController::EquipSecondaryThrowable()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetEquipmentComponent()->EquipSecondaryThrowable();
+}
+
 #pragma endregion ACTIONS
 
 #pragma region READABLES
@@ -500,6 +534,9 @@ void ABasePlayerController::ShowPreviousPage()
 void ABasePlayerController::ShowNpcSpeechSubtitles(const FText& NpcName, const FText& SpeechText,
     const FVector& NpcLocation, float SpeechLoudness) const
 {
+    if (!PlayerCharacter)
+        return;
+    
     float NpcToPlayerSqDistance = FVector::DistSquared(PlayerCharacter->GetActorLocation(), NpcLocation);
     if (NpcToPlayerSqDistance > MaxNpcSubtitlingRange * MaxNpcSubtitlingRange * SpeechLoudness)
         return;
@@ -538,18 +575,6 @@ void ABasePlayerController::OnDialogueEnded(const TArray<FDialogueParticipant>& 
 
     if (!bCompleted)
         return;
-    
-    // auto QS = GetGameInstance()->GetSubsystem<UQuestSubsystem>();
-    // for (const auto& Participant : Participants)
-    // {
-    //     if (Participant.Character && Participant.Character != PlayerCharacter)
-    //     {
-    //         auto NpcCharacter = Cast<INpcCharacter>(Participant.Character);
-    //         FGameplayTagContainer NpcTags;
-    //         Participant.Character->GetOwnedGameplayTags(NpcTags);
-    //         QS->OnNpcInteracted(NpcCharacter->GetNpcDTRH(), NpcTags);
-    //     }
-    // }
 
     PlayerHUDWidget->EndDialogue();
 }
@@ -650,6 +675,7 @@ void ABasePlayerController::OnThrowableEquipped(AThrowableItem* Throwable, int32
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->SetThrowableName(Throwable->GetName());
+        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
         PlayerHUDWidget->SetThrowablesCount(Count);
     }
 }
@@ -659,6 +685,7 @@ void ABasePlayerController::OnThowablesCountChanged(int32 Count)
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->SetThrowablesCount(Count);
+        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
     }
 }
 
@@ -667,7 +694,7 @@ void ABasePlayerController::OnWeaponEquipped(const FText& Name, EReticleType Ret
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->SetReticleType(Reticle);
-        PlayerHUDWidget->ShowWeaponInfo();
+        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
         PlayerHUDWidget->SetWeaponName(Name);
     }
 }
@@ -675,9 +702,7 @@ void ABasePlayerController::OnWeaponEquipped(const FText& Name, EReticleType Ret
 void ABasePlayerController::OnWeaponAmmoInfoChanged(bool bInfiniteClip, bool bInfiniteAmmoSupply)
 {
     if (IsValid(PlayerHUDWidget))
-    {
         PlayerHUDWidget->SetAmmoInfo(bInfiniteClip, bInfiniteAmmoSupply);
-    }
 }
 
 void ABasePlayerController::OnWeaponUnequipped()
@@ -685,6 +710,7 @@ void ABasePlayerController::OnWeaponUnequipped()
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->OnWeaponUnequipped();
+        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
     }
 }
 
@@ -693,6 +719,7 @@ void ABasePlayerController::OnMeleeWeaponEquipped()
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->OnMeleeWeaponEquipped();
+        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
     }
 }
 

@@ -27,6 +27,18 @@ void AMeleeWeaponItem::OnUnequipped(UCharacterEquipmentComponent* CharacterEquip
 	CharacterEquipmentComponent->EquippedMeleeWeapon.Reset();
 }
 
+bool AMeleeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* EquipmentComponent,
+	const FPickUpItemData& PickUpItemData)
+{
+	auto DesignatedSlot = ItemSettings->DesignatedSlot;
+	auto ExistingItem = EquipmentComponent->Loadout[(uint8)DesignatedSlot];
+	if (IsValid(ExistingItem))
+		EquipmentComponent->DropWeapon(ItemSettings->DesignatedSlot, PickUpItemData.PickUpLocation);
+
+	EquipmentComponent->Loadout[(uint8)DesignatedSlot] = this;
+	return Super::TryAddToEquipment(EquipmentComponent, PickUpItemData);
+}
+
 void AMeleeWeaponItem::SetIsHitRegistrationEnabled(bool bEnabled)
 {
 	HitActors.Empty();

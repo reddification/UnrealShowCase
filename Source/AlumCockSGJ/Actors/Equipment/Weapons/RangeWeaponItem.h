@@ -81,7 +81,7 @@ public:
 	virtual void OnEquipped(UCharacterEquipmentComponent* CharacterEquipmentComponent) override;
 	virtual void OnUnequipped(UCharacterEquipmentComponent* CharacterEquipmentComponent) override;
 
-	virtual void OnDropped(APickableEquipmentItem* PickableEquipmentItem) override;
+	virtual void OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem) override;
 	
 protected:
 	virtual void BeginPlay() override;

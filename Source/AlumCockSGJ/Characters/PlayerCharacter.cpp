@@ -9,8 +9,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/Controllers/BasePlayerController.h"
+#include "Components/Character/CharacterEquipmentComponent.h"
 #include "Components/Character/PlayerVisionComponent.h"
 #include "Components/Character/SoakingComponent.h"
+#include "Components/Combat/CharacterCombatComponent.h"
 #include "Data/DataAssets/Characters/PlayerCharacterDataAsset.h"
 #include "Subsystems/NpcSubsystem.h"
 
@@ -37,6 +39,74 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) 
 
     DefaultSpringArmOffset = SpringArmComponent->TargetArmLength;
 }
+
+// void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+// {
+//     Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+    // FInputActionBinding Binding("Jump", IE_Pressed);
+    // Binding.ActionDelegate.BindDelegate(this, &APlayerCharacter::Jump);
+    // InputComponent->AddActionBinding(Binding);
+    // EnableInput(StaticCast<APlayerController*>(Controller));
+
+    // I wish it fucking worked
+    // PlayerInputComponent->BindAxis("Turn", this, &APlayerCharacter::Turn);
+    // PlayerInputComponent->BindAxis("LookUp", this, &APlayerCharacter::LookUp);
+    // PlayerInputComponent->BindAxis("TurnAtRate", this, &APlayerCharacter::TurnAtRate);
+    // PlayerInputComponent->BindAxis("LookUpAtRate", this, &APlayerCharacter::LookUpAtRate);
+    // PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+    // PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+    //
+    // PlayerInputComponent->BindAction("Mantle", IE_Pressed, this, &APlayerCharacter::Mantle);
+    // PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
+    //
+    // PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerCharacter::StartRequestingSprint);
+    // PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::StopRequestingSprint);
+    //
+    // PlayerInputComponent->BindAxis("SwimForward", this, &APlayerCharacter::SwimForward);
+    // PlayerInputComponent->BindAxis("SwimRight", this, &APlayerCharacter::SwimRight);
+    // PlayerInputComponent->BindAxis("SwimUp", this, &APlayerCharacter ::SwimUp);
+    //
+    // PlayerInputComponent->BindAxis("Climb", this, &APlayerCharacter::Climb);
+    //
+    // PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerCharacter::Interact);
+    //
+    // PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &APlayerCharacter::TryStartSliding);
+    // PlayerInputComponent->BindAction("Slide", IE_Released, this, &APlayerCharacter::StopSliding);
+    // PlayerInputComponent->BindAction("Prone", IE_Pressed, this, &APlayerCharacter::ToggleProneState);
+    // PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::ToggleCrouchState);
+    //
+    // PlayerInputComponent->BindAction("Wallrun", IE_Pressed, this, &APlayerCharacter::StartRequestingWallrun);
+    // PlayerInputComponent->BindAction("Wallrun", IE_Released, this, &APlayerCharacter::StopRequestingWallrun);
+    //
+    // PlayerInputComponent->BindAction("Fire", IE_Pressed, CharacterCombatComponent, &UCharacterCombatComponent::StartFiring);
+    // PlayerInputComponent->BindAction("Fire", IE_Released, CharacterCombatComponent, &UCharacterCombatComponent::StopFiring);
+    //
+    // PlayerInputComponent->BindAction("Aim", IE_Pressed, CharacterCombatComponent, &UCharacterCombatComponent::StartAiming);
+    // PlayerInputComponent->BindAction("Aim", IE_Released, CharacterCombatComponent, &UCharacterCombatComponent::StopAiming);
+    //
+    // PlayerInputComponent->BindAction("Reload", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::TryReload);
+    //
+    // PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::PickNextWeapon);
+    // PlayerInputComponent->BindAction("PreviousWeapon", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::PickPreviousWeapon);
+    //
+    // PlayerInputComponent->BindAction("ThrowItem", IE_Pressed, CharacterCombatComponent, &UCharacterCombatComponent::TryThrow);
+    //
+    // PlayerInputComponent->BindAction("PrimaryMeleeAttack", IE_Pressed, CharacterCombatComponent, &UCharacterCombatComponent::StartPrimaryMeleeAttack);
+    // PlayerInputComponent->BindAction("PrimaryMeleeAttack", IE_Released, CharacterCombatComponent, &UCharacterCombatComponent::StopPrimaryMeleeAttack);
+    //
+    // PlayerInputComponent->BindAction("SecondaryMeleeAttack", IE_Pressed, CharacterCombatComponent, &UCharacterCombatComponent::StartHeavyMeleeAttack);
+    // PlayerInputComponent->BindAction("SecondaryMeleeAttack", IE_Released, CharacterCombatComponent, &UCharacterCombatComponent::StopHeavyMeleeAttack);
+    //
+    // PlayerInputComponent->BindAction("ToggleFireMode", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::StartTogglingFireMode);
+    //
+    // PlayerInputComponent->BindAction("UnequipWeapon", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::UnequipWeapon);
+    // PlayerInputComponent->BindAction("EquipPrimaryWeapon", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipPrimaryWeapon);
+    // PlayerInputComponent->BindAction("EquipSecondaryWeapon", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipSecondaryWeapon);
+    // PlayerInputComponent->BindAction("EquipMeleeWeapon", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipMeleeWeapon);
+    // PlayerInputComponent->BindAction("EquipPrimaryThrowable", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipPrimaryThrowable);
+    // PlayerInputComponent->BindAction("EquipSecondaryThrowable", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipSecondaryThrowable);
+// }
 
 void APlayerCharacter::BeginPlay()
 {
@@ -180,22 +250,13 @@ void APlayerCharacter::SwimUp(float Value)
     }
 }
 
-void APlayerCharacter::ClimbUp(float Value)
+void APlayerCharacter::Climb(float Value)
 {
     if (GetGCMovementComponent()->IsClimbing() && !FMath::IsNearlyZero(Value))
     {
         const auto Climbable = GetGCMovementComponent()->GetCurrentClimbable();
-        FVector ClimbingUpVector(Climbable->GetActorUpVector());
-        AddMovementInput(ClimbingUpVector, Value);
-    }
-}
-
-void APlayerCharacter::ClimbDown(float Value)
-{
-    if (GetGCMovementComponent()->IsClimbing() && !FMath::IsNearlyZero(Value))
-    {
-        FVector ClimbingDownVector(-GetGCMovementComponent()->GetCurrentClimbable()->GetActorUpVector());
-        AddMovementInput(ClimbingDownVector, Value);
+        FVector ClimbingVector(Value < 0.f ? -Climbable->GetActorUpVector() : Climbable->GetActorUpVector());
+        AddMovementInput(ClimbingVector, Value);
     }
 }
 

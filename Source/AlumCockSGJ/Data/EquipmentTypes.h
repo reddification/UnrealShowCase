@@ -10,6 +10,7 @@ enum class EAmmunitionType : uint8
 	SniperRifle,
 	Dynamites,
 	RifleGrenades,
+	Grenades,
 	MAX  UMETA(Hidden)
 };
 
@@ -55,6 +56,7 @@ enum class EThrowableSlot : uint8
 {
 	None = 0,
 	Explosive = 1,
+	Secondary = 2,
 	MAX UMETA(Hidden)
 };
 

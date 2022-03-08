@@ -31,7 +31,8 @@ public:
 
 	const UThrowableItemSettings* GetThrowableItemSettings() const;
 	virtual bool CanBePickedUp(UCharacterEquipmentComponent* CharacterEquipmentComponent) override;
-	
+	virtual void OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem) override;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual bool TryAddToEquipment(UCharacterEquipmentComponent* EquipmentComponent, const FPickUpItemData&) override;
@@ -39,7 +40,12 @@ protected:
 	virtual void Destroyed() override;
 	
 private:
-	TWeakObjectPtr<ABaseThrowableProjectile> AttachedProjectile;
-	TWeakObjectPtr<ABaseThrowableProjectile> CurrentProjectile;
-	TWeakObjectPtr<const class UThrowableItemSettings> ThrowableItemSettings;
+	UPROPERTY()
+	ABaseThrowableProjectile* AttachedProjectile = nullptr;
+
+	UPROPERTY()
+	ABaseThrowableProjectile* CurrentProjectile = nullptr;
+
+	UPROPERTY()
+	const UThrowableItemSettings* ThrowableItemSettings = nullptr;
 };

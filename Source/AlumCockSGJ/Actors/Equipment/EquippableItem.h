@@ -36,7 +36,7 @@ public:
 
 	const FText& GetName();
 
-	virtual void OnDropped(APickableEquipmentItem* PickableEquipmentItem);
+	virtual void OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem);
 	
 	virtual EAmmunitionType GetAmmoType() const { return EAmmunitionType::None; }
 	
@@ -51,6 +51,7 @@ public:
 
 	const FWeaponDTR* GetWeaponDTR() const;
 	const FDataTableRowHandle& GetWeaponDTRH() const { return EquipableItemDTRH; }
+	EEquipmentSlot GetDesignatedSlot() const { return ItemSettings ? ItemSettings->DesignatedSlot : EEquipmentSlot::None; }
 
 protected:
 	virtual void BeginPlay() override;

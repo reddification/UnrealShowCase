@@ -69,8 +69,7 @@ public:
 	virtual void SwimUp(float Value) {  }
 	virtual void MoveForward(float Value) override;
 	virtual void Jump() override;
-	virtual void ClimbUp(float Value) { CurrentInputForward = Value; }
-	virtual void ClimbDown(float Value) { CurrentInputForward = Value; }
+	virtual void Climb(float Value) { CurrentInputForward = Value; }
 
 	void StopZiplining();
 	

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "BasePickableItem.h"
+#include "Data/Entities/WorldItemDTR.h"
 #include "PickableEquipmentItem.generated.h"
 
 struct FPickUpItemData
@@ -31,5 +32,5 @@ private:
 	bool bResupplied = false;
 
 	bool TryAddSupply(class UCharacterEquipmentComponent* EquipmentComponent,
-		const TSubclassOf<class AEquippableItem>& ItemClass, int Quantity);
+	                  const TSubclassOf<class AEquippableItem>& ItemClass, int Quantity, EItemType ItemType);
 };

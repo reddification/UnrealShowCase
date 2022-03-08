@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Data/EquipmentTypes.h"
-#include "UObject/Object.h"
 #include "CharacterCombatComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FAimingStateChangedEvent, bool bAiming, class ARangeWeaponItem* Weapon)
@@ -13,18 +12,18 @@ class ALUMCOCKSGJ_API UCharacterCombatComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	void StartShooting(AController* Controller) const;
-	void StopFiring() const;
+	void StartFiring();
+	void StopFiring();
 
-	void StartPrimaryMeleeAttack(AController* AttackerController);
+	void StartPrimaryMeleeAttack();
 	void StopPrimaryMeleeAttack();
-	void StartHeavyMeleeAttack(AController* AttackerController);
+	void StartHeavyMeleeAttack();
 	void StopHeavyMeleeAttack();
 	void StartMeleeAttack(EMeleeAttackType AttackType, AController* AttackerController);
 	void StopMeleeAttack(EMeleeAttackType AttackType);
 	void OnMeleeAttackCompleted();
 
-	bool TryThrow();
+	void TryThrow();
 	void GrabThrowableItem();
 	void InterruptThrowingItem();
 	void ActivateThrowableItem() const;
@@ -32,7 +31,7 @@ public:
 
 	bool CanThrow() const;
 	
-	bool StartAiming();
+	void StartAiming();
 	void StopAiming();
 	bool IsMeleeAttacking() const { return bMeleeAttack; }
 	bool IsAiming() const { return bAiming; }

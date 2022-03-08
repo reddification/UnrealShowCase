@@ -28,7 +28,6 @@ DECLARE_DELEGATE(FMeleeWeaponEquippedEvent)
 typedef TArray<AEquippableItem*, TInlineAllocator<(uint32)EEquipmentSlot::MAX>> TLoadoutArray;
 typedef TArray<AThrowableItem*, TInlineAllocator<(uint32)EThrowableSlot::MAX>> TThrowablesArray;
 
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ALUMCOCKSGJ_API UCharacterEquipmentComponent : public UActorComponent, public ISaveSubsystemInterface
 {
@@ -54,8 +53,18 @@ public:
 	
 	bool IsReloading() const { return bReloading; }
 	int GetActiveThrowablesCount();
-	void DropItem(EEquipmentSlot Slot, const FVector& WorldItemSpawnLocation);
+	void DropWeapon(EEquipmentSlot Slot, const FVector& WorldItemSpawnLocation);
+	void DropThrowable(EThrowableSlot Slot, const FVector& WorldItemSpawnLocation);
 	void DestroyEquipment();
+	void PickNextWeapon() { EquipItem(1); }
+	void PickPreviousWeapon() { EquipItem(-1); }
+
+	void EquipPrimaryThrowable();
+	void EquipPrimaryWeapon();
+	void EquipSecondaryWeapon();
+	void EquipMeleeWeapon();
+	void EquipSecondaryThrowable();
+	bool IsAnythingEquipped() const;
 
 	mutable FWeaponEquippedEvent WeaponEquippedEvent;
 	mutable FWeaponUnequippedEvent WeaponUnequippedEvent;
@@ -70,10 +79,10 @@ public:
 	void CreateLoadout();
 
 	bool PickUpItem(const TSubclassOf<AEquippableItem>& ItemType, const FPickUpItemData& PickUpItemData);
-	bool PickUpThrowable(const TSubclassOf<AEquippableItem>& ThrowableItemClass, const FPickUpItemData& PickUpData);
-	bool PickUpAmmo(EAmmunitionType AmmoType, int Ammo);
+	// bool PickUpThrowable(const TSubclassOf<AEquippableItem>& ThrowableItemClass, const FPickUpItemData& PickUpData);
+	bool PickUpAmmo(EAmmunitionType AmmoType, int Ammo, bool bThrowable);
 	
-	void EquipItem(EEquipmentSlot EquipmentSlot);
+	void EquipItem(EEquipmentSlot NewSlot);
 	void EquipThrowable(EThrowableSlot ThrowableType);
 
 	void OnWeaponsChanged();
@@ -122,15 +131,17 @@ private:
 	void OnActiveWeaponBarrelChanged();
 	void OnAmmoChanged(int32 ClipAmmo) const;
 	void OnOutOfAmmo();
-   
-    UPROPERTY(VisibleAnywhere,SaveGame)
+	int32 GetAmmunationLimit(EAmmunitionType AmmoType) const;
+	
+    UPROPERTY(SaveGame)
     TArray<UClass*>SavedLoadout;
-
     
-      UPROPERTY(VisibleAnywhere,SaveGame)
+    UPROPERTY(SaveGame)
 	TArray<int32> Pouch;
-      UPROPERTY(VisibleAnywhere)
+	
+    UPROPERTY()
 	TArray<AEquippableItem*> Loadout;
+	
 	TThrowablesArray Throwables;
 	
 	bool bReloading = false;

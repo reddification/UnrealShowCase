@@ -32,7 +32,7 @@ bool AEquippableItem::TryAddToEquipment(UCharacterEquipmentComponent* EquipmentC
 		return false;
 	
 	SetOwner(EquipmentComponent->GetOwner());
-	AttachToComponent(EquipmentComponent->CharacterOwner->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, ItemSettings->CharacterUnequippedSocketName);
+	AttachToComponent(EquipmentComponent->CharacterOwner->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, ItemSettings->CharacterUnequippedSocketName);
     return true;
 }
 
@@ -59,7 +59,7 @@ const FText& AEquippableItem::GetName()
 	return FText::GetEmpty();
 }
 
-void AEquippableItem::OnDropped(APickableEquipmentItem* PickableEquipmentItem)
+void AEquippableItem::OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem)
 {
 	PickableEquipmentItem->SetDroppedState(0);
 }

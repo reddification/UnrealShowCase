@@ -7,8 +7,8 @@ bool APickableAmmoItem::PickUp(APlayerCharacter* PlayerCharacter, const FWorldIt
 	bool bCanPickUp = Super::PickUp(PlayerCharacter, WorldItemDTR, false);
 	if (!bCanPickUp)
 		return false;
-	
-	bool bPickedUp = PlayerCharacter->GetEquipmentComponent()->PickUpAmmo(AmmunitionType, AddAmmoOnPickUp);
+
+	bool bPickedUp = PlayerCharacter->GetEquipmentComponent()->PickUpAmmo(AmmunitionType, AddAmmoOnPickUp, false);
 	if (bPickedUp)
 	{
 		PlayPickUpSound(WorldItemDTR);

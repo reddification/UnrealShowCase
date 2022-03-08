@@ -252,7 +252,7 @@ void ABaseCharacter::StartFiring()
 {
 	if (CharacterAttributesComponent->IsAlive() && CanShoot())
 	{
-		CharacterCombatComponent->StartShooting(Controller);
+		CharacterCombatComponent->StartFiring();
 	}
 }
 
@@ -303,7 +303,7 @@ bool ABaseCharacter::CanReload() const
 
 void ABaseCharacter::StartPrimaryMeleeAttack()
 {
-	CharacterCombatComponent->StartPrimaryMeleeAttack(Controller);
+	CharacterCombatComponent->StartPrimaryMeleeAttack();
 }
 
 void ABaseCharacter::StopPrimaryMeleeAttack()
@@ -313,7 +313,7 @@ void ABaseCharacter::StopPrimaryMeleeAttack()
 
 void ABaseCharacter::StartSecondaryMeleeAttack()
 {
-	CharacterCombatComponent->StartHeavyMeleeAttack(Controller);
+	CharacterCombatComponent->StartHeavyMeleeAttack();
 }
 
 void ABaseCharacter::StopSecondaryMeleeAttack()

@@ -75,8 +75,7 @@ private:
     void StartWallrun();
     void StopWallrun();
     void Interact();
-    void ClimbDown(float Value);
-    void ClimbUp(float Value);
+    void Climb(float Value);
     void SwimUp(float Value);
     void SwimRight(float Value);
     void SwimForward(float Value);
@@ -121,6 +120,13 @@ private:
     void ShowPreviousPage();
     
     void SkipDialogueLine();
+    
+    void UnequipWeapon();
+    void EquipPrimaryWeapon();
+    void EquipSecondaryWeapon();
+    void EquipMeleeWeapon();
+    void EquipPrimaryThrowable();
+    void EquipSecondaryThrowable();
     
     void OnAttributeChanged(ECharacterAttribute Attribute, float Percent) const;
 

@@ -21,6 +21,7 @@ public:
 
 	virtual void OnEquipped(UCharacterEquipmentComponent* CharacterEquipmentComponent) override;
 	virtual void OnUnequipped(UCharacterEquipmentComponent* CharacterEquipmentComponent) override;
+	virtual bool TryAddToEquipment(UCharacterEquipmentComponent* EquipmentComponent, const FPickUpItemData& PickUpItemData) override;
 	
 protected:
 	virtual void BeginPlay() override;

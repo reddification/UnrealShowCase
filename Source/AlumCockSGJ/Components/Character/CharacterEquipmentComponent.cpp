@@ -5,7 +5,6 @@
 #include "Actors/Interactive/Pickables/PickableEquipmentItem.h"
 #include "Actors/Projectiles/Projectile.h"
 #include "Characters/BaseHumanoidCharacter.h"
-#include "Components/Combat/CharacterCombatComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 
@@ -35,14 +34,49 @@ void UCharacterEquipmentComponent::CreateLoadout()
 	{
 	    if (IsValid(LoadoutSlot.EquippableItemClass))
 	    {
-	        auto AmmoType = LoadoutSlot.EquippableItemClass.GetDefaultObject()->GetAmmoType();
+	    	auto DefaultObject = LoadoutSlot.EquippableItemClass.GetDefaultObject();
 	        PickUpItem(LoadoutSlot.EquippableItemClass, PickUpItemData);
-	        PickUpAmmo(AmmoType, LoadoutSlot.InitialSupply);
+	        PickUpAmmo(DefaultObject->GetAmmoType(), LoadoutSlot.InitialSupply, DefaultObject->IsA<AThrowableItem>());
 	    }
 	}
 
 	EquipItem(EquipmentSettings->InitialEquippedWeapon);
 	EquipThrowable(EquipmentSettings->InitialEquippedThrowable);
+}
+
+void UCharacterEquipmentComponent::EquipPrimaryWeapon()
+{
+	if (EquippedSlot != EEquipmentSlot::PrimaryWeapon)
+		EquipItem(EEquipmentSlot::PrimaryWeapon);
+}
+
+void UCharacterEquipmentComponent::EquipSecondaryWeapon()
+{
+	if (EquippedSlot != EEquipmentSlot::SideArm)
+		EquipItem(EEquipmentSlot::SideArm);
+}
+
+void UCharacterEquipmentComponent::EquipMeleeWeapon()
+{
+	if (EquippedSlot != EEquipmentSlot::MeleeWeapon)
+		EquipItem(EEquipmentSlot::MeleeWeapon);
+}
+
+void UCharacterEquipmentComponent::EquipPrimaryThrowable()
+{
+	if (EquippedThrowableSlot != EThrowableSlot::Explosive)
+		EquipThrowable(EThrowableSlot::Explosive);
+}
+
+void UCharacterEquipmentComponent::EquipSecondaryThrowable()
+{
+	if (EquippedThrowableSlot != EThrowableSlot::Secondary)
+		EquipThrowable(EThrowableSlot::Secondary);
+}
+
+bool UCharacterEquipmentComponent::IsAnythingEquipped() const
+{
+	return (ActiveThrowable.IsValid() && Pouch[(uint8)ActiveThrowable->GetAmmoType()] > 0) || EquippedRangedWeapon.IsValid() || EquippedMeleeWeapon.IsValid();
 }
 
 bool UCharacterEquipmentComponent::PickUpItem(const TSubclassOf<AEquippableItem>& ItemClass, const FPickUpItemData& PickUpItemData)
@@ -52,57 +86,36 @@ bool UCharacterEquipmentComponent::PickUpItem(const TSubclassOf<AEquippableItem>
 		return false;
 
 	AEquippableItem* Item = GetWorld()->SpawnActor<AEquippableItem>(ItemClass);
-	auto DesignatedSlot = Item->GetSettings()->DesignatedSlot;
-	auto ExistingItem = Loadout[(uint8)DesignatedSlot];
-	if (IsValid(ExistingItem))
-		DropItem(Item->GetSettings()->DesignatedSlot, PickUpItemData.PickUpLocation);
-
-	Loadout[(uint8)DesignatedSlot] = Item;
-	if (!PickUpItemData.bCreatingLoadout)
-		SavedLoadout.Add(ItemClass);
-	
     return Item->TryAddToEquipment(this, PickUpItemData);
 }
 
-// Throwables work too much different from guns to be handled by OOP :(
-bool UCharacterEquipmentComponent::PickUpThrowable(const TSubclassOf<AEquippableItem>& ThrowableItemClass, const FPickUpItemData& PickUpData)
+bool UCharacterEquipmentComponent::PickUpAmmo(EAmmunitionType AmmoType, int Ammo, bool bThrowable)
 {
-	auto DefaultItem = Cast<AThrowableItem>(ThrowableItemClass.GetDefaultObject());
-	if (!DefaultItem)
+	if (Ammo <= 0)
 		return false;
 	
-	auto ThrowableSettings = DefaultItem->GetThrowableItemSettings();
-	auto EquippedThrowable = Throwables[(uint8)ThrowableSettings->ThrowableSlot];
-	bool bItemPickedUp = false;
-	if (!IsValid(EquippedThrowable))
-	{
-		AEquippableItem* Item = GetWorld()->SpawnActor<AEquippableItem>(ThrowableItemClass);
-		bItemPickedUp = Item->TryAddToEquipment(this, PickUpData);
-	}
-
-	return bItemPickedUp;
-}
-
-bool UCharacterEquipmentComponent::PickUpAmmo(EAmmunitionType AmmoType, int Ammo)
-{
-	if (!EquipmentSettings->AmmunitionLimits.Contains(AmmoType))
+	if (bThrowable && ActiveThrowable.IsValid() && ActiveThrowable->GetAmmoType() != AmmoType)
+		return false;
+	
+	int32 AmmoLimit = GetAmmunationLimit(AmmoType);
+	if (AmmoLimit <= 0)
 		return false;
 	
 	int32& CurrentAmmo = Pouch[(uint8)AmmoType];
-	int32 NewAmmo = FMath::Min(EquipmentSettings->AmmunitionLimits[AmmoType], CurrentAmmo + Ammo);
+	int32 NewAmmo = FMath::Min(AmmoLimit, CurrentAmmo + Ammo);
 	bool bPickedUp = NewAmmo != CurrentAmmo;
-
-	if (ActiveThrowable.IsValid() && ActiveThrowable->GetAmmoType() == AmmoType && CurrentAmmo != NewAmmo)
+	
+	if (ActiveThrowable.IsValid() && ActiveThrowable->GetAmmoType() == AmmoType && bPickedUp)
 	{
-		ThrowablesCountChanged.ExecuteIfBound(NewAmmo);
 		if (CurrentAmmo <= 0)
 			ActiveThrowable->SpawnAttachedProjectile();
+
+		CurrentAmmo = NewAmmo;
+		ThrowablesCountChanged.ExecuteIfBound(NewAmmo);
 	}
 	
 	if (EquippedRangedWeapon.IsValid() && EquippedRangedWeapon->GetAmmunitionType() == AmmoType)
-	{
 		WeaponAmmoChangedEvent.ExecuteIfBound(EquippedRangedWeapon->GetAmmo(), NewAmmo);
-	}
 	
 	CurrentAmmo = NewAmmo;
 	return bPickedUp;
@@ -127,12 +140,12 @@ void UCharacterEquipmentComponent::EquipItem(int delta)
 }
 
 // TODO perhaps equipping a weapon should be done in 2 phases: first unequip current weapon and only then start another timer to equip another weapon;
-void UCharacterEquipmentComponent::EquipItem(EEquipmentSlot EquipmentSlot)
+void UCharacterEquipmentComponent::EquipItem(EEquipmentSlot NewSlot)
 {
-	if (bChangingEquipment || !IsValid(Loadout[(uint32)EquipmentSlot]) || !CharacterOwner->CanStartAction(ECharacterAction::ChangeEquipment))
+	if (bChangingEquipment || !IsValid(Loadout[(uint32)NewSlot]) || !CharacterOwner->CanStartAction(ECharacterAction::ChangeEquipment))
 		return;
 	
-	const auto NewWeapon = Loadout[(uint32)EquipmentSlot];
+	const auto NewWeapon = Loadout[(uint32)NewSlot];
 	if (IsValid(NewWeapon))
 	{
 		const float EquipmentDuration = NewWeapon->GetEquipmentDuration() * EquipmentSettings->EquipDurationMultiplier;
@@ -142,7 +155,7 @@ void UCharacterEquipmentComponent::EquipItem(EEquipmentSlot EquipmentSlot)
 		ActiveEquippingData.NewItem = NewWeapon;
 
 		ActiveEquippingData.Montage = NewWeapon->GetCharacterEquipMontage();
-		ActiveEquippingData.EquipmentSlot = EquipmentSlot;
+		ActiveEquippingData.EquipmentSlot = NewSlot;
 		ActiveEquippingData.bNotified = false;
 
 		if (IsValid(ActiveEquippingData.Montage))
@@ -233,7 +246,7 @@ void UCharacterEquipmentComponent::InterruptChangingEquipment()
 
 void UCharacterEquipmentComponent::UnequipItem()
 {
-	if (bChangingEquipment || !CharacterOwner->CanStartAction(ECharacterAction::ChangeEquipment))
+	if (EquippedSlot == EEquipmentSlot::None || bChangingEquipment || !CharacterOwner->CanStartAction(ECharacterAction::ChangeEquipment))
 		return;
 
 	ActiveEquippingData.OldItem = GetEquippedItem();
@@ -251,6 +264,44 @@ void UCharacterEquipmentComponent::UnequipItem()
 		
 	GetWorld()->GetTimerManager().SetTimer(ChangingEquipmentTimer, this, &UCharacterEquipmentComponent::OnWeaponsChanged, EquipmentDuration);
 	CharacterOwner->OnActionStarted(ECharacterAction::ChangeEquipment);
+}
+
+void UCharacterEquipmentComponent::DropWeapon(EEquipmentSlot Slot, const FVector& WorldItemSpawnLocation)
+{
+	auto Item = Loadout[(uint8)Slot];
+	if (!IsValid(Item))
+		return;
+
+	if (bReloading)
+		InterruptReloading();
+		
+	auto WeaponDTR = Item->GetWeaponDTR();
+	if (WeaponDTR)
+	{
+		FActorSpawnParameters ActorSpawnParameters;
+		ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		auto SpawnedItem = GetWorld()->SpawnActor<APickableEquipmentItem>(WeaponDTR->SpawnWorldItemClass, WorldItemSpawnLocation, FRotator::ZeroRotator,
+			ActorSpawnParameters);
+		SpawnedItem->SetItemDTRH(Item->GetWeaponDTRH());
+		Item->OnDropped(this, SpawnedItem);
+	}
+
+	Item->Destroy();
+}
+
+void UCharacterEquipmentComponent::DestroyEquipment()
+{
+	for (auto LoadoutItem: Loadout)
+	{
+		if (IsValid(LoadoutItem))
+			LoadoutItem->Destroy();
+	}
+
+	for (auto ThrowableItem : Throwables)
+	{
+		if (IsValid(ThrowableItem))
+			ThrowableItem->Destroy();
+	}
 }
 
 #pragma endregion CHANGING EQUIPMENT
@@ -464,44 +515,6 @@ int UCharacterEquipmentComponent::GetActiveThrowablesCount()
 	return Pouch[(uint32)ActiveThrowable->GetAmmoType()];
 }
 
-void UCharacterEquipmentComponent::DropItem(EEquipmentSlot Slot, const FVector& WorldItemSpawnLocation)
-{
-	auto Item = Loadout[(uint8)Slot];
-	if (!IsValid(Item))
-		return;
-
-	if (bReloading)
-		InterruptReloading();
-		
-	auto WeaponDTR = Item->GetWeaponDTR();
-	if (WeaponDTR)
-	{
-		FActorSpawnParameters ActorSpawnParameters;
-		ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-		auto SpawnedItem = GetWorld()->SpawnActor<APickableEquipmentItem>(WeaponDTR->SpawnWorldItemClass, WorldItemSpawnLocation, FRotator::ZeroRotator,
-			ActorSpawnParameters);
-		SpawnedItem->SetItemDTRH(Item->GetWeaponDTRH());
-		Item->OnDropped(SpawnedItem);
-	}
-
-	Item->Destroy();
-}
-
-void UCharacterEquipmentComponent::DestroyEquipment()
-{
-	for (auto LoadoutItem: Loadout)
-	{
-		if (IsValid(LoadoutItem))
-			LoadoutItem->Destroy();
-	}
-
-	for (auto ThrowableItem : Throwables)
-	{
-		if (IsValid(ThrowableItem))
-			ThrowableItem->Destroy();
-	}
-}
-
 void UCharacterEquipmentComponent::PutActiveItemInSecondaryHand() const
 {
 	const auto EquippedItem = GetEquippedItem();
@@ -522,6 +535,34 @@ void UCharacterEquipmentComponent::OnThrowableUsed()
 	ThrowablesCountChanged.ExecuteIfBound(--ThrowablesCount);
 	if (ThrowablesCount <= 0)
 		ActiveThrowable->DestroyAttachedProjectile();
+}
+
+void UCharacterEquipmentComponent::DropThrowable(EThrowableSlot Slot, const FVector& WorldItemSpawnLocation)
+{
+	auto Item = Throwables[(uint8)Slot];
+	if (!IsValid(Item))
+		return;
+
+	if (Pouch[(uint8)Item->GetAmmoType()] > 0)
+	{
+		auto WeaponDTR = Item->GetWeaponDTR();
+		if (WeaponDTR)
+		{
+			FActorSpawnParameters ActorSpawnParameters;
+			ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			auto SpawnedItem = GetWorld()->SpawnActor<APickableEquipmentItem>(WeaponDTR->SpawnWorldItemClass, WorldItemSpawnLocation, FRotator::ZeroRotator,
+				ActorSpawnParameters);
+			SpawnedItem->SetItemDTRH(Item->GetWeaponDTRH());
+			if (Item == ActiveThrowable)
+			{
+				ActiveThrowable->DestroyAttachedProjectile();
+				ActiveThrowable.Reset();
+			}
+			Item->OnDropped(this, SpawnedItem);
+		}
+	}
+	
+	Item->Destroy();
 }
 
 #pragma endregion THROWABLES
@@ -554,6 +595,12 @@ void UCharacterEquipmentComponent::OnOutOfAmmo()
 		TryReload();
 }
 
+int32 UCharacterEquipmentComponent::GetAmmunationLimit(EAmmunitionType AmmoType) const
+{
+	int32* AmmoLimit = EquipmentSettings->AmmunitionLimits.Find(AmmoType);
+	return AmmoLimit ? *AmmoLimit : -1;
+}
+
 AEquippableItem* UCharacterEquipmentComponent::GetEquippedItem() const
 {
 	if (EquippedRangedWeapon.IsValid())
@@ -578,12 +625,10 @@ void UCharacterEquipmentComponent::OnLevelDeserialized_Implementation()
            // PickUpItem(PickedItem, GetOwner()->GetActorLocation(), true, false);
        }
    }
-   
 }
 
 bool UCharacterEquipmentComponent::IsPreferStrafing() const
 {
 	auto EquippedItem = GetEquippedItem();
 	return IsValid(EquippedItem) ? EquippedItem->IsPreferStrafing() : false;
-    
 }

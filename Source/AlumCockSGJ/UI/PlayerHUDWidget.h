@@ -36,7 +36,6 @@ public:
     void ReadableNextPage();
     void ReadablePreviousPage();
     void OnWeaponUnequipped();
-    void ShowWeaponInfo();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void AddSubtitleLine(const FText& SpeakerName, const FText& SpeechText, float Duration);
@@ -45,7 +44,8 @@ public:
 	void EndDialogue();
 
 	UDialogueWidget* GetDialogueWidget() const { return DialogueWidget; }
-	
+    void SetAmmoInfoVisible(bool bVisible);
+
 protected:
 	virtual void NativeConstruct() override;
 	

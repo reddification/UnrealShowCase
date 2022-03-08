@@ -20,11 +20,10 @@ class ALUMCOCKSGJ_API APlayerCharacter : public ABaseHumanoidCharacter, public I
 
 public:
     APlayerCharacter(const FObjectInitializer& ObjectInitializer);
-
+	
 	UCharacterAttributesComponent* GetPlayerCharacterAttributesComponent() const { return HumanoidCharacterAttributesComponent.Get(); }
     UPlayerVisionComponent* GetCharacterVisionComponent() const { return CharacterVisionComponent; }
     UCameraComponent* GetCameraComponent() const { return CameraComponent; }
-
     mutable FOnDeath OnDeath;
 	
     virtual void BeginPlay() override;
@@ -40,8 +39,7 @@ public:
     virtual void SwimRight(float Value) override;
     virtual void SwimUp(float Value) override;
 
-	virtual void ClimbUp(float Value) override;
-	virtual void ClimbDown (float Value) override;
+	virtual void Climb(float Value) override;
 	virtual void OnJumped_Implementation() override;
 
 	virtual void OnOutOfHealth() override;
@@ -53,7 +51,7 @@ public:
 	virtual bool IsNpcInteractionAvailable_Implementation(const FGameplayTag& InteractionTag) const override;
 
 	virtual const FDataTableRowHandle& GetNpcDTRH() const override { return PlayerDTRH; }
-	
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UCameraComponent* CameraComponent;
