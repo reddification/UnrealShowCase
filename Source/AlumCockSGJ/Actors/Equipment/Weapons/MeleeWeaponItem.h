@@ -12,7 +12,7 @@ class ALUMCOCKSGJ_API AMeleeWeaponItem : public AEquippableItem
 
 public:
 	
-	const FMeleeAttackData* GetMeleeAttackData(EMeleeAttackType AttackType) const { return Attacks.Find(AttackType); }
+	const FMeleeAttackData* GetMeleeAttackData(EMeleeAttackType AttackType) const;
 
 	void SetIsHitRegistrationEnabled(bool bEnabled);
 	void StartAttack(EMeleeAttackType AttackType, AController* AttackerController);
@@ -26,8 +26,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TMap<EMeleeAttackType, FMeleeAttackData> Attacks;
+	// UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	// TMap<EMeleeAttackType, FMeleeAttackData> Attacks;
 	
 private:
 	void OnMeleeHitRegistered(const FHitResult& HitResult, const FVector& Direction);
@@ -37,4 +37,7 @@ private:
 
 	const FMeleeAttackData* ActiveAttack = nullptr;
 	AController* AttackerController;
+
+	UPROPERTY()
+	const class UMeleeWeaponSettings* MeleeWeaponSettings = nullptr;
 };

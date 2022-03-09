@@ -1,15 +1,16 @@
 #include "Actors/Equipment/Weapons/MeleeWeaponItem.h"
 #include "Components/Character/CharacterEquipmentComponent.h"
 #include "Components/Combat/MeleeHitRegistratorComponent.h"
+#include "Data/DataAssets/Items/MeleeWeaponSettings.h"
 
 void AMeleeWeaponItem::BeginPlay()
 {
 	Super::BeginPlay();
+	MeleeWeaponSettings = Cast<UMeleeWeaponSettings>(ItemSettings);
+	checkf(MeleeWeaponSettings, TEXT("%s: Melee weapon settings must be set"), *GetName().ToString());
 	GetComponents<UMeleeHitRegistratorComponent>(HitRegistrators);
 	for (const auto HitRegistrator : HitRegistrators)
-	{
 		HitRegistrator->MeleeHitRegisteredEvent.BindUObject(this, &AMeleeWeaponItem::OnMeleeHitRegistered);
-	}
 }
 
 void AMeleeWeaponItem::OnEquipped(UCharacterEquipmentComponent* CharacterEquipmentComponent)
@@ -51,7 +52,7 @@ void AMeleeWeaponItem::SetIsHitRegistrationEnabled(bool bEnabled)
 void AMeleeWeaponItem::StartAttack(EMeleeAttackType AttackType, AController* Controller)
 {
 	HitActors.Empty();
-	ActiveAttack = Attacks.Find(AttackType);
+	ActiveAttack = MeleeWeaponSettings->Attacks.Find(AttackType);
 	AttackerController = Controller;
 }
 
@@ -74,4 +75,10 @@ void AMeleeWeaponItem::OnMeleeHitRegistered(const FHitResult& HitResult, const F
 	DamageEvent.DamageTypeClass = ActiveAttack->DamageTypeClass;
 	HitActor->TakeDamage(ActiveAttack->DamageAmount, DamageEvent, AttackerController, GetOwner());
 	HitActors.Add(HitActor);
+}
+
+
+const FMeleeAttackData* AMeleeWeaponItem::GetMeleeAttackData(EMeleeAttackType AttackType) const
+{
+	return MeleeWeaponSettings->Attacks.Find(AttackType);
 }
