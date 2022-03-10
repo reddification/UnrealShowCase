@@ -1,6 +1,9 @@
 #include "BasePlatform.h"
 
 #include "PlatformInvocator.h"
+#include "Components/BoxComponent.h"
+#include "Data/EnvironmentDamage.h"
+#include "GameFramework/Character.h"
 
 ABasePlatform::ABasePlatform()
 {
@@ -11,14 +14,17 @@ ABasePlatform::ABasePlatform()
 
 	PlatformMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Platform mesh"));
 	PlatformMesh->SetupAttachment(RootComponent);
+
+	BottomCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Bottom collision"));
+	BottomCollision->SetupAttachment(PlatformMesh);
 }
 
 void ABasePlatform::BeginPlay()
 {
 	Super::BeginPlay();
-
 	StartLocation = GetActorLocation();
 	EndLocation = GetActorLocation() + GetActorRotation().RotateVector(EndLocation);
+	BottomCollision->OnComponentBeginOverlap.AddDynamic(this, &ABasePlatform::OnBottomCollisionOverlapped);
 	
 	if (IsValid(PlatformTimelineCurve))
 	{
@@ -93,7 +99,7 @@ void ABasePlatform::ResumePlatform()
 void ABasePlatform::SetPlatformPosition(float Alpha)
 {
 	const FVector PlatformTargetLocation = FMath::Lerp(StartLocation, EndLocation, Alpha);
-	SetActorLocation(PlatformTargetLocation);
+	SetActorLocation(PlatformTargetLocation, true);
 }
 
 void ABasePlatform::OnPlatformReachedFinalPosition()
@@ -102,14 +108,23 @@ void ABasePlatform::OnPlatformReachedFinalPosition()
 	{
 		case EPlatformBehavior::ActivatedByGenerator:
 			if (!bReverse)
-			{
 				GetWorld()->GetTimerManager().SetTimer(PlatformReturnDelayTimer, this, &ABasePlatform::ResetPlatform, PlatformResetDelay, false);
-			}
 			break;
 		case EPlatformBehavior::Loop:
 			GetWorld()->GetTimerManager().SetTimer(PlatformLoopDelayTimer, this, &ABasePlatform::ResumePlatform, PlatformLoopDelay, false);
 			break;
+	case EPlatformBehavior::OnDemand:
+		ReverseStop();
 		default:
 			break;
 	}
+}
+
+void ABasePlatform::OnBottomCollisionOverlapped(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
+	UPrimitiveComponent* OtherActorComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& HitResult)
+{
+	auto EnvironmentDamage = GetEnvironmentDamageEvent();
+	PlatformTimeline.Stop();
+	Actor->TakeDamage(DamageOnCollision, EnvironmentDamage, nullptr, this);
+	OnPlatformReachedFinalPosition();
 }

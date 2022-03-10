@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -24,12 +22,18 @@ class ALUMCOCKSGJ_API ABasePlatform : public AActor
 public:	
 	ABasePlatform();
 
+	UFUNCTION(BlueprintCallable)
+	bool IsMoving() const { return PlatformTimeline.IsPlaying(); }
+	
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* PlatformMesh;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	class UBoxComponent* BottomCollision;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Transient, Category=Platform)
 	FVector StartLocation = FVector::ZeroVector;
 	
@@ -66,7 +70,7 @@ protected:
 	 */
 	UFUNCTION()
 	void OnPlatformInvoked();
-	
+
 	/*
 	 * Starts platform movement
 	 */
@@ -78,6 +82,9 @@ protected:
 	 */
 	UFUNCTION(BlueprintCallable, Category=Platform)
 	void ReverseStop();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DamageOnCollision = 20.f;
 	
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -96,4 +103,8 @@ private:
 	void SetPlatformPosition(float Alpha);
 	void OnPlatformReachedFinalPosition();
 	bool bReverse = false;
+
+	UFUNCTION()
+	void OnBottomCollisionOverlapped(UPrimitiveComponent* PrimitiveComponent, AActor* Actor, UPrimitiveComponent* OtherActorComponent, int OtherBodyIndex,
+		bool bFromSweep, const FHitResult& HitResult);
 };
