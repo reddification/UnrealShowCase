@@ -27,16 +27,19 @@ public:
 	FName LeftToesSocketName = "LeftToesSocket";
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
-	float IKInterpSpeed = 15;
+	float LegElevationInterpSpeed = 15;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
-	float IKTraceDistance = 60;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
-	float IKTraceDistanceCrouch = 30;
+	float FeetPivotInterpSpeed = 5.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
-	float TraceExtend = 50;
+	float TraceElevation = 60;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
+	float TraceElevationCrouched = 30;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
+	float TraceDownwardExtend = 50;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
 	float FootLength = 30;
@@ -52,7 +55,4 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin = 0, UIMin = 0))
 	float MaxFootElevation = 40.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bDrawDebug = false;
 };

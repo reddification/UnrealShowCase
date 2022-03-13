@@ -24,18 +24,26 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UIKSettings* IkSettings;
-	
+
 private:
 	FIkData IkData;
-	EDrawDebugTrace::Type DebugDrawType;
+	bool bInitialized = false;
 	
 	void RecalculateFeetPitches(const USkeletalMeshComponent* SkeletalMesh, float DeltaSeconds);
 	void RecalculateKneesExtends(float DeltaSeconds);
 	void UpdateLegsIkOffsetsBoxTrace(const USkeletalMeshComponent* SkeletalMesh, float CapsuleHalfHeight,
 		const FVector& ActorLocation, bool bCrouched, float DeltaSeconds);
 	void RecalculateFeetElevationsWithPelvis();
-	float GetIkElevationForSocket(const FName& SocketName, const USkeletalMeshComponent* SkeletalMesh,
-		const FVector& ActorLocation, float CapsuleHalfHeight, bool bCrouched);
-	float CalculateFootPitch(const USkeletalMeshComponent* SkeletalMesh, const FName& HeelSocketName, const FName& FootSocketName,
-		const FName& ToesSocketName, float PreviousValue);
+	float GetIkElevationForSocket(const FName& SocketName, const FName& FootBoneName,
+	                              const USkeletalMeshComponent* SkeletalMesh, const FVector& ActorLocation, float CapsuleHalfHeight, bool bCrouched);
+	float CalculateFootPitch(const USkeletalMeshComponent* SkeletalMesh, const FName& HeelSocketName, const FName& FootMiddleSocketName,
+	                         const FName& ToesSocketName, const FName& FootSocketName, float PreviousValue);
+
+	EDrawDebugTrace::Type GetDrawDebugType() const;
+
+#if UE_BUILD_DEVELOPMENT || UE_BUILD_DEBUG
+	mutable class UDebugSubsystem* DebugSubsystem = nullptr;
+	const UDebugSubsystem* GetDebugSubsystem() const;
+#endif
+	
 };

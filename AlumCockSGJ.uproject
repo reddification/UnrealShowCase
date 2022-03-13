@@ -23,6 +23,10 @@
 		{
 			"Name": "FMODStudio",
 			"Enabled": true
+		},
+		{
+			"Name": "ControlRig",
+			"Enabled": true
 		}
 	]
 }

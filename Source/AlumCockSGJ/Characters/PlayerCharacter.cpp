@@ -255,7 +255,7 @@ void APlayerCharacter::Climb(float Value)
     if (GetGCMovementComponent()->IsClimbing() && !FMath::IsNearlyZero(Value))
     {
         const auto Climbable = GetGCMovementComponent()->GetCurrentClimbable();
-        FVector ClimbingVector(Value < 0.f ? -Climbable->GetActorUpVector() : Climbable->GetActorUpVector());
+        FVector ClimbingVector = Climbable->GetActorUpVector();
         AddMovementInput(ClimbingVector, Value);
     }
 }

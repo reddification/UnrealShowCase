@@ -47,18 +47,20 @@ bool TraceUtils::SweepSphereSingleByChannel(const UWorld* const World, FHitResul
 		const FQuat Quat = FRotationMatrix::MakeFromZ(TraceVector).ToQuat();
 		// const FQuat Quat = TraceVector.ToOrientationQuat(); // same???
 	
-		DrawDebugSphere(World, Start, Radius, 16, TraceParams.TraceColor,false, TraceParams.DrawTime);
-		DrawDebugSphere(World, End, Radius, 16, TraceParams.TraceColor,false, TraceParams.DrawTime);
-		DrawDebugLine(World, Start, End, FColor::Yellow, false,	TraceParams.DrawTime, 0, 2);
+		// DrawDebugSphere(World, Start, Radius, 16, TraceParams.TraceColor,false);
+		// DrawDebugSphere(World, End, Radius, 16, TraceParams.TraceColor,false);
+		// DrawDebugLine(World, Start, End, FColor::Yellow, false,	TraceParams.DrawTime, 0, 2);
 
-		DrawDebugCapsule(World, (Start + End) * 0.5, HalfHeight, Radius, Quat,
-			FColor::Yellow,false, TraceParams.DrawTime);
+		// DrawDebugCapsule(World, (Start + End) * 0.5, HalfHeight, Radius, Quat,
+		// 	FColor::Yellow,false, TraceParams.DrawTime);
+
+		DrawDebugCapsule(World, (Start + End) * 0.5, HalfHeight, Radius, Quat, FColor::Yellow);
 		
-		if (bHit)
-		{
-			DrawDebugSphere(World, OutHit.Location, Radius, 16, TraceParams.HitColor,false, TraceParams.DrawTime);
-			DrawDebugPoint(World, OutHit.ImpactPoint, 10.f, FColor::Green, false, TraceParams.DrawTime);
-		}
+		// if (bHit)
+		// {
+		// 	DrawDebugSphere(World, OutHit.Location, Radius, 16, TraceParams.HitColor,false, TraceParams.DrawTime);
+		// 	DrawDebugPoint(World, OutHit.ImpactPoint, 10.f, FColor::Green, false, TraceParams.DrawTime);
+		// }
 	}
 #endif
 	

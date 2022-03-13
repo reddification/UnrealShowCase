@@ -13,6 +13,7 @@
 #define ECC_IK ECC_GameTraceChannel9
 
 const FName DebugCategoryLedgeDetection = FName("LedgeDetection");
+const FName DebugCategoryIK = FName("IK");
 const FName DebugCategoryWallrun = FName("Wallrun");
 const FName DebugCategoryAttributes = FName("Attributes");
 const FName DebugCategoryRangeWeapons = FName("RangeWeapons");

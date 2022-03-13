@@ -467,6 +467,7 @@ bool UHumanoidCharacterMovementComponent::TryStartMantle(const FMantlingMovement
 	this->MantlingParameters = NewMantlingParameters;
 	Velocity = FVector::ZeroVector;
 	SetMovementMode(EMovementMode::MOVE_Custom, (uint8)EGCMovementMode::CMOVE_Mantling);
+	CharacterOwner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	GetWorld()->GetTimerManager().SetTimer(MantlingTimerHandle, this,
     	&UHumanoidCharacterMovementComponent::EndMantle, MantlingParameters.Duration);
 	GCCharacter->OnActionStarted(ECharacterAction::Mantle);
@@ -476,6 +477,7 @@ bool UHumanoidCharacterMovementComponent::TryStartMantle(const FMantlingMovement
 void UHumanoidCharacterMovementComponent::EndMantle()
 {
 	SetMovementMode(MOVE_Walking);
+	CharacterOwner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GCCharacter->OnActionEnded(ECharacterAction::Mantle);
 }
 
@@ -492,10 +494,8 @@ void UHumanoidCharacterMovementComponent::PhysCustomMantling(float DeltaTime, in
 	float PositionAlpha = CurveValue.X;
 	float XYCorrectionAlpha = CurveValue.Y;
 	float ZCorrectionAlpha = CurveValue.Z;
-	FVector CorrectedInitialLocation = FMath::Lerp(MantlingParameters.InitialLocation,
-		MantlingParameters.InitialAnimationLocation, XYCorrectionAlpha);
-	CorrectedInitialLocation.Z = FMath::Lerp(MantlingParameters.InitialLocation.Z,
-		MantlingParameters.InitialAnimationLocation.Z, ZCorrectionAlpha);
+	FVector CorrectedInitialLocation = FMath::Lerp(MantlingParameters.InitialLocation, MantlingParameters.InitialAnimationLocation, XYCorrectionAlpha);
+	CorrectedInitialLocation.Z = FMath::Lerp(MantlingParameters.InitialLocation.Z, MantlingParameters.InitialAnimationLocation.Z, ZCorrectionAlpha);
 	FVector MantleTagetDeltaLocation = IsValid(MantlingParameters.MantleTarget)
 		? MantlingParameters.MantleTarget->GetActorLocation() - MantlingParameters.InitialTargetLocation
 		: FVector::ZeroVector;
