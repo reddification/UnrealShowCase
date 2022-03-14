@@ -55,28 +55,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bFleeing = false;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FVector RightFootEffectorLocation = FVector::ZeroVector;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FVector LeftFootEffectorLocation = FVector::ZeroVector;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FVector LeftLegJointTargetOffset;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FVector RightLegJointTargetOffset;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FVector PelvisOffset = FVector::ZeroVector;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FRotator LeftFootRotator = FRotator::ZeroRotator;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
-	FRotator RightFootRotator = FRotator::ZeroRotator;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient, Category = "Character|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Transient)
 	FRotator TurnHeadTowards = FRotator::ZeroRotator;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

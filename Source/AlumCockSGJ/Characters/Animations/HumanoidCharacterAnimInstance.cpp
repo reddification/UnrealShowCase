@@ -25,7 +25,7 @@ void UHumanoidCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		return;
 	}
 
-	const UHumanoidCharacterMovementComponent* MovementComponent = HumanoidCharacter->GetGCMovementComponent();
+	const UHumanoidCharacterMovementComponent* MovementComponent = HumanoidCharacter->GetHumanoidMovementComponent();
 	auto AttributesComponent = HumanoidCharacter->GetBaseCharacterAttributesComponent();
 	
 	bCrouching = MovementComponent->IsCrouching();
@@ -41,28 +41,6 @@ void UHumanoidCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bSliding = MovementComponent->IsSliding();
 	bCarrying = HumanoidCharacter->GetCarryingComponent()->IsCarrying();
 		
-	const FIkData& IkData = HumanoidCharacter->GetInverseKinematicsComponent()->GetIkData();
-	// constraining max foot elevation when crouching because it looks shitty with current animations
-	float AdjustedRightFootElevation = bCrouching && IkData.RightFootElevation > 0.f
-		? FMath::Clamp(IkData.RightFootElevation, 0.0f, 10.0f)
-		: IkData.RightFootElevation;
-	RightFootEffectorLocation = FVector(-AdjustedRightFootElevation, 0.f, 0.f);
-	float AdjustedLeftFootElevation = bCrouching && IkData.LeftFootElevation > 0
-		? FMath::Clamp(IkData.LeftFootElevation, 0.0f, 10.0f)
-		: IkData.LeftFootElevation;
-	LeftFootEffectorLocation = FVector(AdjustedLeftFootElevation, 0.f, 0.f); //left socket X facing upwards
-	PelvisOffset = FVector(IkData.PelvisElevation, 0.f,0.f);
-
-	const float FootMaxPitchInclination = HumanoidCharacter->GetVelocity().Size() > 50.f ? 5.f : 30.f;
-	
-	//I guess animation blueprint should be better aware of some skeleton intricacies so adding extra constaints here as well
-	RightFootRotator = FRotator(0.f, FMath::Clamp(IkData.RightFootPitch, -FootMaxPitchInclination, 40.f), 0.f);
-	LeftFootRotator = FRotator(0.f, FMath::Clamp(IkData.LeftFootPitch, -FootMaxPitchInclination, 40.f), 0.f);
-
-	RightLegJointTargetOffset = FVector(-IkData.RightKneeOutwardExtend, 0.f, 0.f);
-	// 0.75 is a hack for the default idle half-turned pose with left foot set forward
-	LeftLegJointTargetOffset = FVector(IkData.LeftKneeOutwardExtend * 0.75f, 0.f, 0.f);
-
 	TurnHeadTowards = FMath::RInterpTo(TurnHeadTowards, HumanoidCharacter->TurnHeadTowards.Rotation(), 
 	DeltaSeconds, HeadRotationInterpolationSpeed);
 	FRotator CurrentRotation = HumanoidCharacter->GetActorRotation();

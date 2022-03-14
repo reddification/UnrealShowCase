@@ -44,8 +44,7 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-	UInverseKinematicsComponent* GetInverseKinematicsComponent() const { return InverseKinematicsComponent; }
-	const UHumanoidCharacterMovementComponent* GetGCMovementComponent () const { return HumanoidMovementComponent.Get(); }
+	UHumanoidCharacterMovementComponent* GetHumanoidMovementComponent () const { return HumanoidMovementComponent.Get(); }
 	USoakingComponent* GetSoakingComponent() const { return SoakingComponent; }
 	class UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 	UCarryingComponent* GetCarryingComponent() const { return CarryingComponent; }
@@ -91,9 +90,6 @@ public:
 	virtual bool IsConsumingStamina() const override;
 	
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
-	UInverseKinematicsComponent* InverseKinematicsComponent;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	ULedgeDetectionComponent* LedgeDetectionComponent; 
 	

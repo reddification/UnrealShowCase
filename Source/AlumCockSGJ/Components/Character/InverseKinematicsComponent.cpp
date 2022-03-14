@@ -265,7 +265,7 @@ float UInverseKinematicsComponent::CalculateFootPitch(const USkeletalMeshCompone
 	// if (!(bHeelHit || bToesHit || bFootHit))
 	// 	return 0.f;
 
-	const float EnablePitchDistanceThreshold = 2.5f;
+	const float EnablePitchDistanceThreshold = 1.3f;
 	// FMath::IsNearlyEqual(ToesDistance, HeelDistance, EnablePitchDistanceThreshold) || 
 	if (FootDistance < EnablePitchDistanceThreshold
 		&& (HeelDistance < EnablePitchDistanceThreshold || ToesDistance < EnablePitchDistanceThreshold))

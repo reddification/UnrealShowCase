@@ -32,10 +32,6 @@ ABaseHumanoidCharacter::ABaseHumanoidCharacter(const FObjectInitializer& ObjectI
 	HumanoidMovementComponent = StaticCast<UHumanoidCharacterMovementComponent*>(GetCharacterMovement());
 	HumanoidCharacterAttributesComponent = StaticCast<UCharacterAttributesComponent*>(CharacterAttributesComponent);
 	
-	InverseKinematicsComponent = CreateDefaultSubobject<UInverseKinematicsComponent>(TEXT("InverseKinematics"));
-	AddOwnedComponent(InverseKinematicsComponent);
-	InverseKinematicsComponent->SetScale(GetActorScale().Z);
-
 	LedgeDetectionComponent = CreateDefaultSubobject<ULedgeDetectionComponent>(TEXT("LedgeDetection"));
 	AddOwnedComponent(LedgeDetectionComponent);
 
@@ -83,13 +79,6 @@ void ABaseHumanoidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	TryChangeSprintState();
-	const EPosture CurrentPosture = HumanoidMovementComponent->GetCurrentPosture();
-	if (HumanoidMovementComponent->IsMovingOnGround() && (CurrentPosture == EPosture::Standing || CurrentPosture == EPosture::Crouching))
-	{
-		InverseKinematicsComponent->CalculateIkData(GetMesh(), GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-			GetActorLocation(), bIsCrouched, DeltaTime);
-	}
-
 	UpdateSuffocatingState();
 }
 
