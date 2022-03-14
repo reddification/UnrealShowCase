@@ -123,6 +123,9 @@ void ABasePlatform::OnPlatformReachedFinalPosition()
 void ABasePlatform::OnBottomCollisionOverlapped(UPrimitiveComponent* PrimitiveComponent, AActor* Actor,
 	UPrimitiveComponent* OtherActorComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& HitResult)
 {
+	if (HitResult.Normal != FVector::ZeroVector)
+		return;
+	
 	auto EnvironmentDamage = GetEnvironmentDamageEvent();
 	PlatformTimeline.Stop();
 	Actor->TakeDamage(DamageOnCollision, EnvironmentDamage, nullptr, this);
