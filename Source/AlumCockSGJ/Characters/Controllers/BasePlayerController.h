@@ -127,7 +127,9 @@ private:
     void EquipMeleeWeapon();
     void EquipPrimaryThrowable();
     void EquipSecondaryThrowable();
-    
+
+    void ToggleWalking();
+
     void OnAttributeChanged(ECharacterAttribute Attribute, float Percent) const;
 
     bool bIgnoreCameraPitch;

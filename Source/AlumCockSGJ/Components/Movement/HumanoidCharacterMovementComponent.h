@@ -42,7 +42,9 @@ public:
 
 	void SetIsOutOfStamina(bool bNewOutOfStamina);
 	void SetIsAiming(bool bNewState) { bAiming = bNewState; }
-	
+
+	void ToggleWalking();
+
 #pragma region CROUCH/PRONE
 	
 	virtual bool IsCrouching() const override { return CurrentPosture == EPosture::Crouching; }
@@ -60,6 +62,7 @@ public:
 	FCrouchedOrProned CrouchedOrProned;
 	FWokeUp WokeUp;
 	FSlidingStateChangedEvent SlidingStateChangedEvent;
+	bool bWalking = false;
 
 #pragma endregion CROUCH/PRONE
 

@@ -164,6 +164,8 @@ void ABasePlayerController::SetupInputComponent()
     InputComponent->BindAction("EquipMeleeWeapon", IE_Pressed, this, &ABasePlayerController::EquipMeleeWeapon);
     InputComponent->BindAction("EquipPrimaryThrowable", IE_Pressed, this, &ABasePlayerController::EquipPrimaryThrowable);
     InputComponent->BindAction("EquipSecondaryThrowable", IE_Pressed, this, &ABasePlayerController::EquipSecondaryThrowable);
+
+    InputComponent->BindAction("ToggleWalking", IE_Pressed, this, &ABasePlayerController::ToggleWalking);
 }
 
 #pragma region CLIMBING
@@ -490,6 +492,12 @@ void ABasePlayerController::EquipSecondaryThrowable()
 {
     if (IsValid(PlayerCharacter))
         PlayerCharacter->GetEquipmentComponent()->EquipSecondaryThrowable();
+}
+
+void ABasePlayerController::ToggleWalking()
+{
+    if (IsValid(PlayerCharacter))
+        PlayerCharacter->GetHumanoidMovementComponent()->ToggleWalking();
 }
 
 #pragma endregion ACTIONS

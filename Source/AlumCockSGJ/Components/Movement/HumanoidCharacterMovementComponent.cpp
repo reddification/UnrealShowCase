@@ -53,11 +53,18 @@ float UHumanoidCharacterMovementComponent::GetMaxSpeed() const
 		RawSpeed =  CurrentAimSpeed;
 	else if (GCCharacter->GetCarryingComponent()->IsCarrying())
 		RawSpeed =  GCCharacter->GetCarryingComponent()->GetSettings()->CarryingMovementSpeed;
+	else if (bWalking)
+		RawSpeed = MovementSettings->WalkingSpeed;
 	else 
 		RawSpeed = Super::GetMaxSpeed();
 	
 	float Soakness = GCCharacter->GetSoakingComponent()->GetSoakness();
 	return FMath::Max(50.f, RawSpeed * (1.f - Soakness));
+}
+
+void UHumanoidCharacterMovementComponent::ToggleWalking()
+{
+	bWalking = !bWalking;
 }
 
 bool UHumanoidCharacterMovementComponent::TryStartSprint()

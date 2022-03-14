@@ -252,9 +252,9 @@ void APlayerCharacter::SwimUp(float Value)
 
 void APlayerCharacter::Climb(float Value)
 {
-    if (GetGCMovementComponent()->IsClimbing() && !FMath::IsNearlyZero(Value))
+    if (GetHumanoidMovementComponent()->IsClimbing() && !FMath::IsNearlyZero(Value))
     {
-        const auto Climbable = GetGCMovementComponent()->GetCurrentClimbable();
+        const auto Climbable = GetHumanoidMovementComponent()->GetCurrentClimbable();
         FVector ClimbingVector = Climbable->GetActorUpVector();
         AddMovementInput(ClimbingVector, Value);
     }

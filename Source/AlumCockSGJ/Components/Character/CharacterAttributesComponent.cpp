@@ -37,7 +37,7 @@ void UCharacterAttributesComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
 float UCharacterAttributesComponent::GetStaminaConsumption() const
 {
-	return Super::GetStaminaConsumption() + CharacterOwner->GetGCMovementComponent()->IsSprinting() || CharacterOwner->GetGCMovementComponent()->IsWallrunning()
+	return Super::GetStaminaConsumption() + CharacterOwner->GetHumanoidMovementComponent()->IsSprinting() || CharacterOwner->GetHumanoidMovementComponent()->IsWallrunning()
 		? HumanoidCharacterSettings->SprintStaminaConsumptionRate
 		: 0.f;
 }

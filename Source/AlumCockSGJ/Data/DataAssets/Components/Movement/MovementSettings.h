@@ -20,6 +20,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement|Speed", meta=(ClampMin=0, UIMin=0))
 	float CrawlSpeed = 200.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement|Speed", meta=(ClampMin=0, UIMin=0))
+	float WalkingSpeed = 150.f;
 	
 #pragma endregion SPEED UPROPERTIES
 
@@ -36,6 +39,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin=0, UIMin=0))
 	float ProneCapsuleHalfHeight = 40.0f;
-
+	
 #pragma endregion CAPSULE
 };
