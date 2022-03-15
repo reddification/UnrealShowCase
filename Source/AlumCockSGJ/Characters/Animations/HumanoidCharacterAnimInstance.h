@@ -31,16 +31,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bSwimming;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Climbing")
 	bool bClimbingLadder;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Climbing")
+	float ClimbingRatio = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zipline")
 	bool bZiplining;	
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Zipline")
+	FVector ZiplineHandLocation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wallrun")
 	bool bWallRunning;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wallrun")
 	ESide WallrunSide = ESide::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -60,9 +66,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FRotator RotationSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float ClimbingRatio = 0.0f;
 	
 	TWeakObjectPtr<class ABaseHumanoidCharacter> HumanoidCharacter;
 
@@ -71,7 +74,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(UIMin=0.f, ClampMin=0.f))
 	float Stamina = 1.f;
-	
+
 private:
 	FRotator LastCharacterRotation = FRotator::ZeroRotator;
 };

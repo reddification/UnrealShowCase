@@ -14,6 +14,6 @@ UEnvironmentDamage::UEnvironmentDamage(const FObjectInitializer& ObjectInitializ
 FDamageEvent GetEnvironmentDamageEvent()
 {
 	FDamageEvent DamageEvent;
-	DamageEvent.DamageTypeClass = TSubclassOf<UEnvironmentDamage>();
+	DamageEvent.DamageTypeClass = UEnvironmentDamage::StaticClass();
 	return DamageEvent;
 }

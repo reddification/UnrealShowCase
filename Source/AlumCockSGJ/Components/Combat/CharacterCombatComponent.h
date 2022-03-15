@@ -49,10 +49,12 @@ protected:
 	
 private:
 	TWeakObjectPtr<class ABaseCharacter> CharacterOwner;
+	ECollisionEnabled::Type PreThrowCollisionEnabledType;
 	bool bThrowing = false;
 	bool bAiming = false;
 	bool bMeleeAttack = false;
 	void OnShot(UAnimMontage* Montage);
 	FTimerHandle ThrowTimer;
 	FTimerHandle MeleeAttackTimer;
+	void ResetCharacterCollisionType();
 };

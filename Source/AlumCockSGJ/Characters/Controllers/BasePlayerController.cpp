@@ -683,8 +683,8 @@ void ABasePlayerController::OnThrowableEquipped(AThrowableItem* Throwable, int32
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->SetThrowableName(Throwable->GetName());
-        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
         PlayerHUDWidget->SetThrowablesCount(Count);
+        UpdateWeaponInfoVisibility();
     }
 }
 
@@ -693,7 +693,7 @@ void ABasePlayerController::OnThowablesCountChanged(int32 Count)
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->SetThrowablesCount(Count);
-        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
+        UpdateWeaponInfoVisibility();
     }
 }
 
@@ -702,8 +702,8 @@ void ABasePlayerController::OnWeaponEquipped(const FText& Name, EReticleType Ret
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->SetReticleType(Reticle);
-        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
         PlayerHUDWidget->SetWeaponName(Name);
+        UpdateWeaponInfoVisibility();
     }
 }
 
@@ -718,8 +718,14 @@ void ABasePlayerController::OnWeaponUnequipped()
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->OnWeaponUnequipped();
-        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
+        UpdateWeaponInfoVisibility();
     }
+}
+
+void ABasePlayerController::UpdateWeaponInfoVisibility()
+{
+    auto EquipmentComponent = PlayerCharacter->GetEquipmentComponent();
+    PlayerHUDWidget->SetWeaponInfoVisible(EquipmentComponent->IsWeaponEquipped(),EquipmentComponent->IsThrowableEquipped());
 }
 
 void ABasePlayerController::OnMeleeWeaponEquipped()
@@ -727,7 +733,7 @@ void ABasePlayerController::OnMeleeWeaponEquipped()
     if (IsValid(PlayerHUDWidget))
     {
         PlayerHUDWidget->OnMeleeWeaponEquipped();
-        PlayerHUDWidget->SetAmmoInfoVisible(PlayerCharacter->GetEquipmentComponent()->IsAnythingEquipped());
+        UpdateWeaponInfoVisibility();
     }
 }
 

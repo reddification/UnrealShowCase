@@ -44,7 +44,7 @@ public:
 	void EndDialogue();
 
 	UDialogueWidget* GetDialogueWidget() const { return DialogueWidget; }
-    void SetAmmoInfoVisible(bool bVisible);
+    void SetWeaponInfoVisible(bool bWeaponEquipped, bool bThrowablesEquipped);
 
 protected:
 	virtual void NativeConstruct() override;

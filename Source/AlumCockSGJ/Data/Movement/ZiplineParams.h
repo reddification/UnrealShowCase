@@ -11,4 +11,6 @@ struct FZiplineParams
 	float Friction = 0.f;
 	float CurrentSpeed = 0.f;
 	FVector CorrectedActorLocation = FVector::ZeroVector;
+	bool bCorrected = false;
+	FVector AdjustedHandPosition = FVector::ZeroVector;
 };

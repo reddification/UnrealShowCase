@@ -15,6 +15,13 @@ void UWeaponInfoWidget::SetAmmo(int32 CurrentAmmo, int32 TotalAmmo)
 	}
 }
 
+void UWeaponInfoWidget::UpdateVisiblity(bool bWeaponEquipped, bool bThrowableEquipped)
+{
+	SetVisibility(bWeaponEquipped || bThrowableEquipped ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	SetWeaponBlockVisible(bWeaponEquipped);
+	SetThrowableBlockVisible(bThrowableEquipped);
+}
+
 void UWeaponInfoWidget::SetThrowablesCount(int32 ThrowablesCount)
 {
 	RemainingThrowablesTextblock->SetText(ThrowablesCount > 0 ? FText::AsNumber(ThrowablesCount) : FText::GetEmpty());
@@ -34,6 +41,16 @@ void UWeaponInfoWidget::SetWeaponInfo(bool bNewInfiniteClip, bool bNewInfiniteAm
 
 	if (bNewInfiniteAmmoSupply)
 		RemainingAmmoTextblock->SetText(FText::FromString(UTF8_TO_TCHAR("∞")));
+}
+
+void UWeaponInfoWidget::SetWeaponBlockVisible(bool bVisible)
+{
+	WeaponBlock->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+}
+
+void UWeaponInfoWidget::SetThrowableBlockVisible(bool bEquipped)
+{
+	ThrowablesBlock->SetVisibility(bEquipped ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 }
 
 void UWeaponInfoWidget::NativeConstruct()

@@ -6,9 +6,9 @@
 #include "ReticleWidget.h"
 #include "Components/TextBlock.h"
 
-void UPlayerHUDWidget::SetAmmoInfoVisible(bool bVisible)
+void UPlayerHUDWidget::SetWeaponInfoVisible(bool bWeaponEquipped, bool bThrowablesEquipped)
 {
-    WeaponInfoWidget->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+    WeaponInfoWidget->UpdateVisiblity(bWeaponEquipped, bThrowablesEquipped);
 }
 
 void UPlayerHUDWidget::NativeConstruct()
@@ -94,6 +94,7 @@ void UPlayerHUDWidget::ReadablePreviousPage()
 void UPlayerHUDWidget::OnWeaponUnequipped()
 {
     SetReticleType(EReticleType::None);
+    WeaponInfoWidget->SetWeaponBlockVisible(false);
 }
 
 void UPlayerHUDWidget::StartDialogue()

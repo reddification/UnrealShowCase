@@ -673,6 +673,7 @@ bool UHumanoidCharacterMovementComponent::TryStartZiplining(const FZiplineParams
 	// SetDesiredRotation(NewZiplineParams.ZiplineNormalizedDirection.ToOrientationRotator());
 	// bForceRotation = true;
 	// ForceTargetRotation = ;
+	ZiplineParams.bCorrected = false;
 	SetMovementMode(MOVE_Custom, (uint8)EGCMovementMode::CMOVE_Zipline);
 	GCCharacter->OnActionStarted(ECharacterAction::Zipline);
 	return true;
@@ -696,20 +697,41 @@ void UHumanoidCharacterMovementComponent::PhysCustomZiplining(float DeltaTime, i
 		(ZiplineParams.DeclinationAngleSin - ZiplineParams.Friction * ZiplineParams.DeclinationAngleCos);
 	float ClampedSpeed = FMath::Clamp(ZiplineParams.CurrentSpeed, ZiplineSettings->MinZiplineSpeed,
 		ZiplineSettings->MaxZiplineSpeed);
+#if ENABLE_DRAW_DEBUG
+	bool bDebugEnabled = GetDebugSubsystem()->IsDebugCategoryEnabled(DebugCategoryZipline);
+#else
+	bool bDebugEnabled = false;
+#endif
 	// GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green,
 	// 	FString::Printf(TEXT("Zipline unclamped speed: %f"), ZiplineParams.CurrentSpeed));
 	Velocity = ClampedSpeed * ZiplineParams.ZiplineNormalizedDirection;
 	
 	const FVector UncorrectedCharacterLocation = GetActorLocation();
-	
+
 	if (!UncorrectedCharacterLocation.Equals(ZiplineParams.CorrectedActorLocation, 0.2f))
 	{
-		const float CorrectionRatio = 20.f;
+		const float CorrectionRatio = 10.f;
 		const FVector CorrectionDelta = (ZiplineParams.CorrectedActorLocation - UncorrectedCharacterLocation) * CorrectionRatio;
 		Velocity += CorrectionDelta;
 	}
+	else if (!ZiplineParams.bCorrected)
+	{
+		ZiplineParams.bCorrected = true;
+		if (bDebugEnabled)
+		{
+			DrawDebugBox(GetWorld(), ZiplineParams.CorrectedActorLocation, FVector(15, 15, 15),
+				FColor::Orange, false, 30, 0, 2);
+		}
+	}
+
+	if (bDebugEnabled)
+	{
+		DrawDebugBox(GetWorld(), ZiplineParams.CorrectedActorLocation, FVector(5, 5, 5),
+			FColor::Green, false, 30);
+	}
 	
-	ZiplineParams.CorrectedActorLocation += ClampedSpeed * ZiplineParams.ZiplineNormalizedDirection * DeltaTime;
+	ZiplineParams.CorrectedActorLocation += ZiplineParams.ZiplineNormalizedDirection * ClampedSpeed * DeltaTime;
+	ZiplineParams.AdjustedHandPosition += ZiplineParams.ZiplineNormalizedDirection * ClampedSpeed * DeltaTime;
 	FVector Delta = Velocity * DeltaTime;
 	FHitResult Hit;
 	// bool bMoved = SafeMoveUpdatedComponent(Delta, GetOwner()->GetActorRotation(), true, Hit);

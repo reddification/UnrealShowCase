@@ -64,7 +64,8 @@ public:
 	void EquipSecondaryWeapon();
 	void EquipMeleeWeapon();
 	void EquipSecondaryThrowable();
-	bool IsAnythingEquipped() const;
+	bool IsWeaponEquipped() const;
+	bool IsThrowableEquipped() const;
 
 	mutable FWeaponEquippedEvent WeaponEquippedEvent;
 	mutable FWeaponUnequippedEvent WeaponUnequippedEvent;

@@ -74,9 +74,14 @@ void UCharacterEquipmentComponent::EquipSecondaryThrowable()
 		EquipThrowable(EThrowableSlot::Secondary);
 }
 
-bool UCharacterEquipmentComponent::IsAnythingEquipped() const
+bool UCharacterEquipmentComponent::IsWeaponEquipped() const
 {
-	return (ActiveThrowable.IsValid() && Pouch[(uint8)ActiveThrowable->GetAmmoType()] > 0) || EquippedRangedWeapon.IsValid() || EquippedMeleeWeapon.IsValid();
+	return EquippedRangedWeapon.IsValid() || EquippedMeleeWeapon.IsValid();
+}
+
+bool UCharacterEquipmentComponent::IsThrowableEquipped() const
+{
+	return ActiveThrowable.IsValid() && Pouch[(uint8)ActiveThrowable->GetAmmoType()] > 0;
 }
 
 bool UCharacterEquipmentComponent::PickUpItem(const TSubclassOf<AEquippableItem>& ItemClass, const FPickUpItemData& PickUpItemData)

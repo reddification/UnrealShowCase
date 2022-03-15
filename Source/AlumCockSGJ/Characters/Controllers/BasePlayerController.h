@@ -140,6 +140,7 @@ private:
 
     void OnWeaponEquipped(const FText& Name, EReticleType Reticle);
     void OnWeaponUnequipped();
+    void UpdateWeaponInfoVisibility();
     void OnMeleeWeaponEquipped();
     void OnPauseGame();
     void OnJournalOpen();

@@ -40,7 +40,9 @@ void UHumanoidCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bZiplining = MovementComponent->IsZiplining();
 	bSliding = MovementComponent->IsSliding();
 	bCarrying = HumanoidCharacter->GetCarryingComponent()->IsCarrying();
-		
+	if (MovementComponent->IsZiplining())
+		ZiplineHandLocation = MovementComponent->GetZiplineParams().AdjustedHandPosition;
+	
 	TurnHeadTowards = FMath::RInterpTo(TurnHeadTowards, HumanoidCharacter->TurnHeadTowards.Rotation(), 
 	DeltaSeconds, HeadRotationInterpolationSpeed);
 	FRotator CurrentRotation = HumanoidCharacter->GetActorRotation();

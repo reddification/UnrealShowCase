@@ -15,6 +15,7 @@
 const FName DebugCategoryLedgeDetection = FName("LedgeDetection");
 const FName DebugCategoryIK = FName("IK");
 const FName DebugCategoryWallrun = FName("Wallrun");
+const FName DebugCategoryZipline = FName("Zipline");
 const FName DebugCategoryAttributes = FName("Attributes");
 const FName DebugCategoryRangeWeapons = FName("RangeWeapons");
 const FName DebugCategoryMeleeWeapons = FName("MeleeWeapons");

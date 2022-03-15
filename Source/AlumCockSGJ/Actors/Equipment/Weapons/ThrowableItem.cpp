@@ -28,6 +28,9 @@ void AThrowableItem::Throw(AController* OwnerController)
 	OwnerController->GetPlayerViewPoint(ViewPoint, ViewRotation);
 	FVector LaunchDirection = ViewRotation.Vector();
 
+	if (!IsValid(CurrentProjectile))
+		return;
+	
 	CurrentProjectile->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	FHitResult TraceResult;
 	const FVector TraceEnd = ViewPoint + LaunchDirection * ThrowableItemSettings->ThrowSpeed;

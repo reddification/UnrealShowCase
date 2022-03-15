@@ -91,9 +91,13 @@ void UCharacterCombatComponent::TryThrow()
 	UAnimMontage* ThrowMontage = ActiveThrowable->GetThrowMontage();
 	if (IsValid(ThrowMontage))
 	{
+		PreThrowCollisionEnabledType = CharacterOwner->GetMesh()->GetCollisionEnabled();
+		CharacterOwner->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		const float PlayRate = ThrowMontage->GetPlayLength() / ActiveThrowable->GetThrowDuration();
 		CharacterOwner->GetEquipmentComponent()->PutActiveItemInSecondaryHand();
-		CharacterOwner->PlayAnimMontage(ThrowMontage, PlayRate);	
+		CharacterOwner->PlayAnimMontage(ThrowMontage, PlayRate);
+		GetWorld()->GetTimerManager().SetTimer(ThrowTimer, this, &UCharacterCombatComponent::ResetCharacterCollisionType,
+			ActiveThrowable->GetThrowDuration() * PlayRate);
 	}
 	else
 	{
@@ -258,4 +262,9 @@ void UCharacterCombatComponent::SetMeleeHitRegEnabled(bool bEnabled)
 void UCharacterCombatComponent::OnWeaponPickedUp(ARangeWeaponItem* RangeWeapon)
 {
 	RangeWeapon->ShootEvent.AddUObject(this, &UCharacterCombatComponent::OnShot);
+}
+
+void UCharacterCombatComponent::ResetCharacterCollisionType()
+{
+	CharacterOwner->GetMesh()->SetCollisionEnabled(PreThrowCollisionEnabledType);
 }

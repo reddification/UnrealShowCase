@@ -491,7 +491,7 @@ FZiplineParams ABaseHumanoidCharacter::GetZipliningParameters(const AZipline* Zi
 {
 	FZiplineParams ZiplineParams;
 	ZiplineParams.Friction = Zipline->GetCableFriction();
-	ZiplineParams.ZiplineNormalizedDirection = Zipline->GetZiplineDirection().GetSafeNormal();
+	ZiplineParams.ZiplineNormalizedDirection = Zipline->GetZiplineDirection();
 	ZiplineParams.DeclinationAngle = Zipline->GetDeclinationAngle();
 	const FVector TopPoleLocation = Zipline->GetTopPoleWorldLocation();
 	const FVector BottomPoleLocation = Zipline->GetBottomPoleWorldLocation();
@@ -499,7 +499,7 @@ FZiplineParams ABaseHumanoidCharacter::GetZipliningParameters(const AZipline* Zi
 	ZiplineParams.MovementPlane = FPlane(TopPoleLocation,BottomPoleLocation, TopPoleProjection);
 				
 	const float ZiplineDistance = (TopPoleLocation - BottomPoleLocation).Size();
-	const FVector& ActorLocation = GetActorLocation();
+	FVector ActorLocation = GetActorLocation();
 	FVector ProjectedVelocity = FVector::VectorPlaneProject(GetVelocity(), ZiplineParams.MovementPlane.GetNormal());
 	ZiplineParams.CurrentSpeed = ProjectedVelocity.Size();
 	
@@ -507,17 +507,22 @@ FZiplineParams ABaseHumanoidCharacter::GetZipliningParameters(const AZipline* Zi
 	ZiplineParams.DeclinationAngleCos = FMath::Cos(FMath::DegreesToRadians(ZiplineParams.DeclinationAngle));
 	
 	FVector SocketOffset = GetMesh()->GetSocketTransform(HumanoidCharacterSettings->ZiplineHandPositionSocketName,RTS_Actor).GetLocation();
+	SocketOffset = ZiplineParams.ZiplineNormalizedDirection.ToOrientationRotator().RotateVector(SocketOffset);
+	
 	const float CharacterToZiplineDistance = (TopPoleLocation - ActorLocation).Size();
-	FVector NewActorLocation = TopPoleLocation
-		+ (BottomPoleLocation - TopPoleLocation) * CharacterToZiplineDistance / ZiplineDistance;
+	FVector CableAttachmentLocation = TopPoleLocation + (BottomPoleLocation - TopPoleLocation) * CharacterToZiplineDistance / ZiplineDistance;
 	float RotationHeightDeltaAngle = (180.f - ZiplineParams.DeclinationAngle) * 0.5f;
 	const UCapsuleComponent* CharacterCapsule = GetCapsuleComponent();
-	const float HalfHeightAdjustment = (CharacterCapsule->GetScaledCapsuleHalfHeight() + CharacterCapsule->GetScaledCapsuleRadius())
-		* ZiplineParams.DeclinationAngleSin * (1.f / FMath::Tan(FMath::DegreesToRadians(RotationHeightDeltaAngle)));
+
+	const float Height = CharacterCapsule->GetScaledCapsuleHalfHeight() + CharacterCapsule->GetScaledCapsuleRadius(); 
+	const float HalfHeightAdjustment = Height * ZiplineParams.DeclinationAngleSin * (1.f / FMath::Tan(FMath::DegreesToRadians(RotationHeightDeltaAngle)));
 	// const float HalfHeightAdjustment = (CharacterCapsule->GetScaledCapsuleHalfHeight())
 	// 	* ZiplineParams.DeclinationAngleSin * (1.f / FMath::Tan(FMath::DegreesToRadians(RotationHeightDeltaAngle)));
 	
-	ZiplineParams.CorrectedActorLocation = NewActorLocation - SocketOffset - HalfHeightAdjustment * FVector::UpVector;
+	// ZiplineParams.CorrectedActorLocation = CableAttachmentLocation - (SocketOffset + HalfHeightAdjustment) * FVector::UpVector;
+	ZiplineParams.CorrectedActorLocation = CableAttachmentLocation - SocketOffset;
+	// ZiplineParams.CorrectedActorLocation = CableAttachmentLocation - SocketOffset - HalfHeightAdjustment * FVector::UpVector;
+	ZiplineParams.AdjustedHandPosition = CableAttachmentLocation;
 	return ZiplineParams;
 }
 

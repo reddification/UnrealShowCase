@@ -77,7 +77,7 @@ FVector AZipline::GetZiplineDirection() const
 		? AdjustedSecondPoleLocation
 		: AdjustedFirstPoleLocation;
 
-	return  LowerPole - HigherPole;
+	return  (LowerPole - HigherPole).GetSafeNormal();
 }
 
 float AZipline::GetDeclinationAngle() const
