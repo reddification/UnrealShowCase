@@ -294,19 +294,12 @@ void UAINpcActivityComponent::RunRandomRestActivity(UBehaviorTreeComponent* BTCo
 	Boredom = 0.f;
 	if (RunningActivityType == ENpcActivityType::Rest && NewRestActivityIndex == RunningRestActivityIndex)
 		return;
-
-	SetRunningActivityType(ENpcActivityType::Rest);
 	
 	RunningRestActivityIndex = NewRestActivityIndex;
 	auto& NewRestActivity = NpcRestActivities[RunningRestActivityIndex];
 
-	// TODO idk...
-	if (RunningActivity)
-		RunningActivity->Suspend(OwnerController, true);
-	
-	RunningActivity = NewRestActivity.ActivityInstance;
-	BTComponent->GetBlackboardComponent()->SetValueAsFloat(BB_WorkUtility, NewRestActivity.ActivityNecessity);
-	BTComponent->SetDynamicSubtree(RunningActivityTag, NewRestActivity.BehaviorTree);
+	PlannedActivity = FPlannedActivity(NewRestActivity.ActivityInstance, NewRestActivity.BehaviorTree, NewRestActivity.ActivityNecessity, ENpcActivityType::Rest);
+	PlanActivity();
 }
 
 void UAINpcActivityComponent::RunMaxUtilityActivity(UBehaviorTreeComponent* BTComponent)
@@ -332,14 +325,10 @@ void UAINpcActivityComponent::RunMaxUtilityActivity(UBehaviorTreeComponent* BTCo
 		NpcWorkActivities[RunningWorkActivityIndex].ActivityInstance->Suspend(OwnerController, true);
 	
 	RunningWorkActivityIndex = MaxUtilityActivityIndex;
-	auto& NewActivityDescriptor = NpcWorkActivities[RunningWorkActivityIndex];
-	// NewActivityDescriptor.ActivityInstance->Resume();
-	if (RunningActivity)
-		RunningActivity->Suspend(OwnerController, true);
-
-	RunningActivity = NewActivityDescriptor.ActivityInstance;
-	BTComponent->GetBlackboardComponent()->SetValueAsFloat(BB_WorkUtility, NewActivityDescriptor.ActivityNecessity);
-	BTComponent->SetDynamicSubtree(RunningActivityTag, NewActivityDescriptor.BehaviorTree);
+	auto& NewActivityWrapper = NpcWorkActivities[RunningWorkActivityIndex];
+	PlannedActivity = FPlannedActivity(NewActivityWrapper.ActivityInstance, NewActivityWrapper.BehaviorTree,
+		NewActivityWrapper.ActivityNecessity, ENpcActivityType::Work);
+	PlanActivity();
 }
 
 void UAINpcActivityComponent::RunQuestActivity(const FNpcQuestBehaviorDescriptor& QuestBehaviorDescriptor)
@@ -351,20 +340,41 @@ void UAINpcActivityComponent::RunQuestActivity(const FNpcQuestBehaviorDescriptor
 	
 	auto ActivityInstance = NewObject<UNpcQuestActivityInstance>(OwnerController, QuestBehaviorDescriptor.BehaviorDescriptor.ActivityInstanceClass);
 	ActivityInstance->NpcActivityEvent.BindUObject(this, &UAINpcActivityComponent::OnQuestActivityEventOccured);
-	auto BTComponent = GetBehaviorTreeComponent();
-	
 	SetupActivityWrapperBase(QuestBehaviorDescriptor.BehaviorDescriptor, ActivityInstance, RunningQuestActivity);
+	// TODO perhaps check if run until world state haven't occured already
 	ActivityInstance->SetStopConditions(OwnerController, QuestBehaviorDescriptor);
 	
-	BTComponent->GetBlackboardComponent()->SetValueAsFloat(BB_WorkUtility, QuestBehaviorDescriptor.BehaviorDescriptor.WorkUtility);
+	PlannedActivity = FPlannedActivity(ActivityInstance, QuestBehaviorDescriptor.BehaviorDescriptor.BehaviorTree,
+		QuestBehaviorDescriptor.BehaviorDescriptor.WorkUtility, ENpcActivityType::Quest);
+	PlanActivity();
+}
 
-	// TODO perhaps check if run until world state haven't occured already
-	if (IsValid(RunningActivity))
-		RunningActivity->Suspend(OwnerController, IsInteractionInterruptionRequired());
-		
-	RunningActivity = ActivityInstance;
-	BTComponent->SetDynamicSubtree(RunningActivityTag, QuestBehaviorDescriptor.BehaviorDescriptor.BehaviorTree);
-	SetRunningActivityType(ENpcActivityType::Quest);
+void UAINpcActivityComponent::PlanActivity()
+{
+	float SuspendDelay = 0.f;
+	if (RunningActivity)
+		SuspendDelay = RunningActivity->Suspend(OwnerController, IsInteractionInterruptionRequired());
+
+	if (SuspendDelay <= 0.f)
+		LaunchPlannedActivity();
+	else
+		GetWorld()->GetTimerManager().SetTimer(DelayedActivityLaunchTimer, this, &UAINpcActivityComponent::LaunchPlannedActivity, SuspendDelay);
+}
+
+void UAINpcActivityComponent::LaunchPlannedActivity()
+{
+	if (PlannedActivity.bStarted || !IsValid(PlannedActivity.ActivityInstance) || !IsValid(PlannedActivity.BehaviorTree))
+		return;
+
+	auto BTComponent = GetBehaviorTreeComponent();
+	RunningActivity = PlannedActivity.ActivityInstance;
+	// hacky hacky mf
+	BTComponent->GetBlackboardComponent()->ClearValue(BB_ActorToInteract);
+	BTComponent->GetBlackboardComponent()->ClearValue(BB_ActorInteractionState);
+	BTComponent->GetBlackboardComponent()->SetValueAsFloat(BB_WorkUtility, PlannedActivity.ActivityNecessity);
+	BTComponent->SetDynamicSubtree(RunningActivityTag, PlannedActivity.BehaviorTree);
+	SetRunningActivityType(PlannedActivity.NpcActivityType);
+	PlannedActivity.bStarted = true;
 }
 
 #pragma endregion RUN
@@ -436,10 +446,9 @@ void UAINpcActivityComponent::ResetRunningQuestActivity()
 {
 	if (IsValid(RunningQuestActivity.ActivityInstance))
 	{
-		// RunningQuestActivity.ActivityInstance->Suspend(OwnerController, true);
-		if (IsValid(RunningQuestActivity.ActivityInstance))
-			RunningQuestActivity.ActivityInstance->ConditionalBeginDestroy();
-		
+		// RunningQuestActivity.ActivityInstance->MarkPendingKill();
+		// RunningQuestActivity.ActivityInstance = nullptr;
+		RunningQuestActivity.ActivityInstance->Suspend(OwnerController, true);
 		RunningQuestActivity = FNpcQuestActivityWrapper();
 	}
 }

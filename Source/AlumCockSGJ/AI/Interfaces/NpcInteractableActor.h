@@ -6,6 +6,21 @@
 #include "UObject/Interface.h"
 #include "NpcInteractableActor.generated.h"
 
+USTRUCT(BlueprintType)
+struct FNpcInteractionStopResult
+{
+	GENERATED_BODY()
+
+	FNpcInteractionStopResult() {  }
+	FNpcInteractionStopResult(float delay) : bStopped(true), Delay(delay) {  }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bStopped = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Delay = -1.f;
+};
+
 class ABaseCharacter;
 UINTERFACE()
 class UNpcInteractableActor : public UInterface
@@ -21,14 +36,17 @@ public:
 	mutable FInteractionAvailableStateChangedEvent InteractionAvailableStateChangedEvent;
 	mutable FNpcInteractionStateChangedEvent InteractionStateChangedEvent;
 
+	// TODO get rid of BP native events
+	
 	UFUNCTION(BlueprintNativeEvent)
 	bool TryStartNpcInteraction(ABaseCharacter* Character, const FGameplayTag& InteractionTag = FGameplayTag::EmptyTag);
 	virtual bool TryStartNpcInteraction_Implementation(ABaseCharacter* Npc,
 		const FGameplayTag& InteractionTag = FGameplayTag::EmptyTag) { return false; }
 	
 	UFUNCTION(BlueprintNativeEvent)
-	bool StopNpcInteraction(ABaseCharacter* Npc, bool bInterupted = false);
-	virtual bool StopNpcInteraction_Implementation(ABaseCharacter* Npc, bool bInterupted = false) { return false; }
+	FNpcInteractionStopResult StopNpcInteraction(ABaseCharacter* Npc, bool bInterupted = false);
+	virtual FNpcInteractionStopResult StopNpcInteraction_Implementation(
+		ABaseCharacter* Npc, bool bInterupted = false) { return FNpcInteractionStopResult(); }
 
 	UFUNCTION(BlueprintNativeEvent)
 	bool IsNpcInteractionAvailable(const FGameplayTag& InteractionTag = FGameplayTag::EmptyTag) const;

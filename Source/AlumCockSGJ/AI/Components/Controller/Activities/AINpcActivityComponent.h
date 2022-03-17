@@ -16,6 +16,31 @@ class ALUMCOCKSGJ_API UAINpcActivityComponent : public UAIBaseActivityComponent,
 {
 	GENERATED_BODY()
 
+	struct FPlannedActivity
+	{
+		FPlannedActivity() {  }
+		
+		FPlannedActivity(UNpcActivityInstanceBase* activityInstance, UBehaviorTree* behaviorTree, float activityNecessity,
+			ENpcActivityType npcActivityType)
+		{
+			bStarted = false;
+			ActivityInstance = activityInstance;
+			BehaviorTree = behaviorTree;
+			ActivityNecessity = activityNecessity;
+			NpcActivityType = npcActivityType;
+		}
+		
+		bool bStarted = false;
+		float ActivityNecessity = 0.f;
+		ENpcActivityType NpcActivityType = ENpcActivityType::None;
+
+		UPROPERTY()
+		UBehaviorTree* BehaviorTree = nullptr;
+		
+		UPROPERTY()
+		UNpcActivityInstanceBase* ActivityInstance = nullptr;
+	};
+	
 public:
 	UAINpcActivityComponent();
 	UNpcActivityInstanceBase* GetActivityInstance();
@@ -78,10 +103,13 @@ private:
 	bool bInConversation = false;
 	
 	FTimerHandle UtilityTimer;
+	FTimerHandle DelayedActivityLaunchTimer;
 
 	void RunRandomRestActivity(UBehaviorTreeComponent* BTComponent);
+	void PlanActivity();
 	void RunMaxUtilityActivity(UBehaviorTreeComponent* BTComponent);
 	void ResetRunningQuestActivity();
+	void LaunchPlannedActivity();
 
 	void SelectNextActivity();
 	void SetRunningActivityType(ENpcActivityType NewType);
@@ -102,4 +130,5 @@ private:
 	UBehaviorTreeComponent* GetBehaviorTreeComponent() const;
 
 	FNpcActorInteractionData CurrentInteractionData;
+	FPlannedActivity PlannedActivity;
 };

@@ -47,7 +47,8 @@ public:
 	virtual void Interact() override;
 
 	virtual bool TryStartNpcInteraction_Implementation(ABaseCharacter* Npc, const FGameplayTag& InteractionTag) override;
-	virtual bool StopNpcInteraction_Implementation(ABaseCharacter* Npc, bool bInterupted) override;
+	virtual FNpcInteractionStopResult
+	StopNpcInteraction_Implementation(ABaseCharacter* Npc, bool bInterupted) override;
 	virtual bool IsNpcInteractionAvailable_Implementation(const FGameplayTag& InteractionTag) const override;
 
 	virtual const FDataTableRowHandle& GetNpcDTRH() const override { return PlayerDTRH; }

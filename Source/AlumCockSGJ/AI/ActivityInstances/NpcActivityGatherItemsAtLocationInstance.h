@@ -36,8 +36,9 @@ public:
 	virtual void Observe(const AAIController* AIController, UBlackboardComponent* Blackboard) override;
 	virtual bool StartInteracting(const AAIController* AIController, AActor* ActorToInteract,
 		FNpcActivityLatentActionStateChangedEvent* LatentActionCallback, bool bResetActorOnFail) override;
-	virtual bool StopInteracting(const AAIController* AIController,
-		FNpcActivityLatentActionStateChangedEvent* LatentActionCallback, bool bResetActorOnFail) override;
+	virtual float StopInteracting(const AAIController* AIController,
+	                              FNpcActivityLatentActionStateChangedEvent* LatentActionCallback,
+	                              bool bResetActorOnFail) override;
 	virtual void ProgressIteration(int IterationChange) override;
 	
 protected:

@@ -27,7 +27,7 @@ EBTNodeResult::Type UBTTask_Interact::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	MyOwnerComp = &OwnerComp;
 	bool bActionStarted = bStartInteract
 		? InteractionActivity->StartInteracting(OwnerComp.GetAIOwner(), InteractionActor, &OnInteractionCompleted, bResetInteractionActorOnFail)
-		: InteractionActivity->StopInteracting(OwnerComp.GetAIOwner(), &OnInteractionCompleted, bResetInteractionActorOnFail);
+		: InteractionActivity->StopInteracting(OwnerComp.GetAIOwner(), &OnInteractionCompleted, bResetInteractionActorOnFail) >= 0.f;
 	
 	return bActionStarted
 		? EBTNodeResult::InProgress

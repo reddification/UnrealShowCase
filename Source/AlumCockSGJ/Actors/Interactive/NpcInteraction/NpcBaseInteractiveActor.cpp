@@ -143,9 +143,10 @@ bool ANpcBaseInteractiveActor::TryStartNpcInteraction_Implementation(ABaseCharac
 	return true;
 }
 
-bool ANpcBaseInteractiveActor::StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted)
+FNpcInteractionStopResult ANpcBaseInteractiveActor::StopNpcInteraction_Implementation(
+	ABaseCharacter* Character, bool bInterupted)
 {
-	return true;
+	return FNpcInteractionStopResult();
 }
 
 bool ANpcBaseInteractiveActor::GetInteractionLocation(const FGameplayTag& InteractionTag, FVector& OutLocation)

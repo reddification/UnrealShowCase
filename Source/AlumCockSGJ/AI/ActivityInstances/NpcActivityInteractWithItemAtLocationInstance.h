@@ -23,7 +23,7 @@ public:
 		FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback, bool bResetActorOnFail) override;
 	// virtual bool StopInteracting(const AAIController* AIController,
 	// 	FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback) override;
-	virtual void Suspend(AAIController* AIController, bool bAbortInteraction) override;
+	virtual float Suspend(AAIController* AIController, bool bAbortInteraction) override;
 	virtual void Observe(const AAIController* AIController, UBlackboardComponent* Blackboard) override;
 	virtual void ProgressIteration(int IterationChange) override;
 	virtual void OnPerceptionUpdated(AActor* Actor, FAIStimulus AIStimulus) override;

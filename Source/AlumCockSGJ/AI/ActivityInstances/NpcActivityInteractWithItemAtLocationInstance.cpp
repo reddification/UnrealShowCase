@@ -126,10 +126,10 @@ const UNpcActivityInteractWithItemSettings* UNpcActivityInteractWithItemAtLocati
 	return CurrentActivitySettings;
 }
 
-void UNpcActivityInteractWithItemAtLocationInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
+float UNpcActivityInteractWithItemAtLocationInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
 {
-	Super::Suspend(AIController, bAbortInteraction);
 	GetOuter()->GetWorld()->GetTimerManager().ClearTimer(InteractionTimer);
+	return Super::Suspend(AIController, bAbortInteraction);
 }
 
 void UNpcActivityInteractWithItemAtLocationInstance::ProgressIteration(int IterationChange)

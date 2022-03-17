@@ -91,8 +91,10 @@ void UNpcActivityFindActorAndInteractInstance::OnPerceptionUpdated(AActor* Actor
 	}
 }
 
-bool UNpcActivityFindActorAndInteractInstance::StopInteracting(const AAIController* AIController,
-	FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback, bool bResetInteractionActorOnFail)
+float UNpcActivityFindActorAndInteractInstance::StopInteracting(const AAIController* AIController,
+                                                                FNpcActivityLatentActionStateChangedEvent*
+                                                                InteractionCompletedCallback,
+                                                                bool bResetInteractionActorOnFail)
 {
 	auto ActorInteractionData = GetActorInteractionData();
 	if (ActorInteractionData->IsInteracting())

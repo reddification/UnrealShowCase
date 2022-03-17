@@ -18,8 +18,9 @@ public:
 	                              FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback, bool bResetActorOnFail) override;
 	void OnInteractionCompleted();
 	virtual void OnPerceptionUpdated(AActor* Actor, FAIStimulus AIStimulus) override;
-	virtual bool StopInteracting(const AAIController* AIController, FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
-		bool bResetInteractionActorOnFail) override;
+	virtual float StopInteracting(const AAIController* AIController,
+	                              FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
+	                              bool bResetInteractionActorOnFail) override;
 	
 protected:
 	virtual void OnInteractionActorAvailableStateChanged(AActor* InteractiveActor, bool bAvailable) override;

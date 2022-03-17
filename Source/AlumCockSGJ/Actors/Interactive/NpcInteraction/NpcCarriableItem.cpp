@@ -1,6 +1,7 @@
 #include "NpcCarriableItem.h"
 
 #include "Characters/BaseHumanoidCharacter.h"
+#include "Data/DataAssets/Components/CarryingSettings.h"
 
 ANpcCarriableItem::ANpcCarriableItem()
 {
@@ -31,7 +32,8 @@ bool ANpcCarriableItem::TryStartNpcInteraction_Implementation(ABaseCharacter* Ch
 	return bStartCarrying;
 }
 
-bool ANpcCarriableItem::StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterruped)
+FNpcInteractionStopResult ANpcCarriableItem::StopNpcInteraction_Implementation(
+	ABaseCharacter* Character, bool bInterruped)
 {
 	auto HumanoidCharacter = Cast<ABaseHumanoidCharacter>(Character);
 	if (!IsValid(HumanoidCharacter))
@@ -42,11 +44,11 @@ bool ANpcCarriableItem::StopNpcInteraction_Implementation(ABaseCharacter* Charac
 		CarryingCallbackHandle = CarryingComponent->CarryingStateChangedEvent.AddUObject(this, &ANpcCarriableItem::OnCarryingStateChanged);
 	
 	// SubmitInteractionState(Character, false);
-	bool bCanStopInteracting = bInterruped
-		? HumanoidCharacter->GetCarryingComponent()->InterruptCarrying()
-		: HumanoidCharacter->GetCarryingComponent()->StopCarrying();
+	bool bCanStopInteracting = bInterruped ? CarryingComponent->InterruptCarrying() : CarryingComponent->StopCarrying();
 
-	return bCanStopInteracting;
+	auto CarryingSettings = CarryingComponent->GetSettings();
+	FNpcInteractionStopResult Result(bInterruped ? CarryingSettings->ReleaseDurationSeconds : CarryingSettings->PutDurationSeconds);
+	return Result;
 }
 
 void ANpcCarriableItem::ClearInteractionState(ABaseCharacter* Character)

@@ -50,22 +50,18 @@ bool ANpcPiano::TryStartNpcInteraction_Implementation(ABaseCharacter* Character,
 	return true;
 }
 
-bool ANpcPiano::StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted)
+FNpcInteractionStopResult ANpcPiano::StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted)
 {
 	if (!IsValid(Character))
-		return false;
+		return FNpcInteractionStopResult();
 	
-	bool bCanStopInteraction = Super::StopNpcInteraction_Implementation(Character, bInterupted);
-	if (!bCanStopInteraction)
-		return false;
-
 	auto& InteractionData = InteractingCharacters[0];
 	auto PlayMontage = InteractionData.Montage;
 	Character->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageSectionEndLoop, PlayMontage);
 	float StandUpDuration = PlayMontage->GetSectionLength(PlayMontage->GetSectionIndex(MontageSectionEndLoop));
 	GetWorld()->GetTimerManager().SetTimer(StandUpTimer,this, &ANpcPiano::OnStoodUp, StandUpDuration);
 	
-	return true;
+	return FNpcInteractionStopResult(StandUpDuration);
 }
 
 void ANpcPiano::OnSat()

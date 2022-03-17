@@ -192,7 +192,6 @@ void AAICitizenController::OnQuestActivityFinished()
 		CitizenReactionsComponent->SetSensesBlocked(false);
 }
 
-
 void AAICitizenController::InitializeNpc(INpcCharacter* NpcCharacter)
 {
 	const auto& NpcDTRH = NpcCharacter->GetNpcDTRH();

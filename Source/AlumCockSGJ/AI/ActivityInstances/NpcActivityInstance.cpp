@@ -69,11 +69,13 @@ void UNpcActivityInstanceBase::Resume()
 	SetActive(true);
 }
 
-void UNpcActivityInstanceBase::Suspend(AAIController* AIController, bool bAbortInteraction)
+float UNpcActivityInstanceBase::Suspend(AAIController* AIController, bool bAbortInteraction)
 {
+	float SuspendDelay = -1.f;
 	if (!bActive)
-		return;
+		return SuspendDelay;
 
+	SuspendDelay = 0.f;
 	if (bAbortInteraction)
 	{
 		const auto ActorInteractionData = GetActorInteractionData();
@@ -81,11 +83,12 @@ void UNpcActivityInstanceBase::Suspend(AAIController* AIController, bool bAbortI
 		{
 			// LastActorInteractionLocation = ActorInteractionData->ActorToInteract->GetActorLocation();
 			if (ActorInteractionData->IsInteracting())
-				StopInteracting(AIController, ActiveLatentActionCallback, true);
+				SuspendDelay = StopInteracting(AIController, ActiveLatentActionCallback, true);
+			else
+				ResetInteractionActor();
 
 			InteractionMemory.ActorToInteract = ActorInteractionData->ActorToInteract;
 			InteractionMemory.UntilWorldTime = GetOuter()->GetWorld()->GetTimeSeconds() + 180.f;
-			ResetInteractionActor();
 		}
 	}
 	else
@@ -99,6 +102,7 @@ void UNpcActivityInstanceBase::Suspend(AAIController* AIController, bool bAbortI
 		ActivityManager->ResetNavigationFilterClass();
 	
 	SetActive(false);
+	return SuspendDelay;
 }
 
 void UNpcActivityInstanceBase::Complete(UBlackboardComponent* BlackboardComponent)
@@ -224,22 +228,24 @@ bool UNpcActivityInstanceBase::StartInteracting(const AAIController* AIControlle
 	return true;
 }
 
-bool UNpcActivityInstanceBase::StopInteracting(const AAIController* AIController, FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
-	bool bResetInteractionActorOnFail)
+float UNpcActivityInstanceBase::StopInteracting(const AAIController* AIController,
+                                                FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
+                                                bool bResetInteractionActorOnFail)
 {
 	auto ActorInteractionData = GetActorInteractionData();
-	bool bStopInteracting = StopInteracting(ActorInteractionData);
-	if (!bStopInteracting)
-		return false;
+	float SuspendDelay = StopInteracting(ActorInteractionData);
 
-	ActiveLatentActionCallback = InteractionCompletedCallback;
-	return true;
+	if (SuspendDelay >= 0.f)
+		ActiveLatentActionCallback = InteractionCompletedCallback;
+	
+	return SuspendDelay;
 }
 
-bool UNpcActivityInstanceBase::StopInteracting(const FNpcActorInteractionData* ActorInteractionData)
+float UNpcActivityInstanceBase::StopInteracting(const FNpcActorInteractionData* ActorInteractionData)
 {
+	float SuspendDelay = -1.f;
 	if (!ActorInteractionData->IsInteracting() || ActorInteractionData->ActivityId != GetActivityId())
-		return false;
+		return SuspendDelay;
 	
 	if (!ActorInteractionData->GetInteractableActor()->InteractionStateChangedEvent.IsBoundToObject(this))
 	{
@@ -248,11 +254,11 @@ bool UNpcActivityInstanceBase::StopInteracting(const FNpcActorInteractionData* A
 	}
 
 	auto Npc = Cast<IActivityCharacterProvider>(GetOuter())->GetActivityCharacter();;
-	bool bCompletedInteraction = INpcInteractableActor::Execute_StopNpcInteraction(ActorInteractionData->ActorToInteract, Npc, false);
-	if (!bCompletedInteraction)
-		return false;
+	auto StopInteractionResult = INpcInteractableActor::Execute_StopNpcInteraction(ActorInteractionData->ActorToInteract, Npc, false);
+	if (StopInteractionResult.bStopped)
+		SuspendDelay = StopInteractionResult.Delay;
 
-	return true;
+	return SuspendDelay;
 }
 
 void UNpcActivityInstanceBase::SetActorToIgnore(AActor* Actor)

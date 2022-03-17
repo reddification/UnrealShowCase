@@ -39,7 +39,7 @@ void AAIDogCharacter2::OnConstruction(const FTransform& Transform)
 
 bool AAIDogCharacter2::InteractWithPlayer(APlayerCharacter* Interactor)
 {
-    return NpcPlayerInteractionComponent->StartInteractWithCharacter(Interactor);
+    return NpcPlayerInteractionComponent->StartInteractWithPlayer(Interactor);
 }
 
 void AAIDogCharacter2::SetNpcDTRH(const FDataTableRowHandle& NpcDTRH)

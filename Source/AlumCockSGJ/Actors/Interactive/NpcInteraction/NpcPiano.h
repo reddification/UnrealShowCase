@@ -13,7 +13,8 @@ public:
 	ANpcPiano();
 	
 	virtual bool TryStartNpcInteraction_Implementation(ABaseCharacter* Character, const FGameplayTag& InteractionTag = FGameplayTag()) override;
-	virtual bool StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted) override;
+	virtual FNpcInteractionStopResult
+	StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted) override;
 	
 protected:
 	virtual void BeginPlay() override;

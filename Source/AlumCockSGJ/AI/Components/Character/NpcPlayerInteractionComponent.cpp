@@ -16,8 +16,11 @@ void UNpcPlayerInteractionComponent::BeginPlay()
 	NpcCharacter = GetOwner();
 }
 
-bool UNpcPlayerInteractionComponent::StartInteractWithCharacter(ABaseCharacter* Interactor)
+bool UNpcPlayerInteractionComponent::StartInteractWithPlayer(ABaseCharacter* Interactor)
 {
+	if (bInteracting)
+		return false;
+	
 	FGameplayTagContainer CurrentCharacterState;
 	OwnerCharacter->GetOwnedGameplayTags(CurrentCharacterState);
 	
@@ -27,7 +30,7 @@ bool UNpcPlayerInteractionComponent::StartInteractWithCharacter(ABaseCharacter* 
 	FNpcDTR* NpcDTR = NpcCharacter->GetNpcDTRH().GetRow<FNpcDTR>("");
 	if (!NpcDTR)
 		return false;
-    
+	
 	if (NpcDTR->NpcPlayerInteractions)
 	{
 		auto WSS = GetWorld()->GetGameInstance()->GetSubsystem<UWorldStateSubsystem>();
@@ -57,15 +60,15 @@ bool UNpcPlayerInteractionComponent::StartInteractWithCharacter(ABaseCharacter* 
 
 		if (ValidInteractions.Num() == 1)
 		{
-			return DialogueSubsystem->StartDialogue(ValidInteractions[0], OwnerCharacter, NpcDTR);
+			bInteracting = DialogueSubsystem->StartDialogue(ValidInteractions[0], OwnerCharacter, NpcDTR);
 		}
 		else
 		{
 			// TODO show dialogue box with options
 			if (ValidInteractions.Num() > 0)
-				return DialogueSubsystem->StartDialogue(ValidInteractions[0], OwnerCharacter, NpcDTR);
+				bInteracting = DialogueSubsystem->StartDialogue(ValidInteractions[0], OwnerCharacter, NpcDTR);
 		}
 	}
 
-	return false;
+	return bInteracting;
 }

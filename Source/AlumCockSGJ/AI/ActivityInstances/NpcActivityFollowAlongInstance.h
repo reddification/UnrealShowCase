@@ -13,7 +13,7 @@ class ALUMCOCKSGJ_API UNpcActivityFollowAlongInstance : public UNpcQuestActivity
 
 public:
 	virtual void Resume() override;
-	virtual void Suspend(AAIController* AIController, bool bAbortInteraction) override;
+	virtual float Suspend(AAIController* AIController, bool bAbortInteraction) override;
 
 	virtual APawn* GetFollowedActor() const override { return FollowedActor; }
 	virtual const FVector& GetPredictedLocation() const override { return PredictedLocation; }

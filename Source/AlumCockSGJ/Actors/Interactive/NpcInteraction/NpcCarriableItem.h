@@ -15,7 +15,7 @@ public:
 	ANpcCarriableItem();
 
 	virtual bool TryStartNpcInteraction_Implementation(ABaseCharacter* Character, const FGameplayTag& InteractionTag = FGameplayTag()) override;
-	virtual bool StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted = false) override;
+	virtual FNpcInteractionStopResult StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted = false) override;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

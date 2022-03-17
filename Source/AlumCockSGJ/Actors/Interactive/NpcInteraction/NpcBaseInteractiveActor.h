@@ -22,7 +22,7 @@ public:
 	ANpcBaseInteractiveActor();
 
 	virtual bool TryStartNpcInteraction_Implementation(ABaseCharacter* Character, const FGameplayTag& InteractionTag = FGameplayTag()) override;
-	virtual bool StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted) override;
+	virtual FNpcInteractionStopResult StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted) override;
 	virtual bool GetInteractionLocation(const FGameplayTag& InteractionTag, FVector& OutLocation) override;
 	
 	virtual bool IsNpcInteractionAvailable_Implementation(const FGameplayTag& InteractionTag = FGameplayTag()) const override;

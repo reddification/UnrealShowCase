@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AI/Components/Character/NpcPlayerInteractionComponent.h"
 #include "AI/Components/Character/NpcLogic/NpcBaseLogicComponent.h"
 #include "Components/WidgetNameplateComponent.h"
 #include "UObject/Interface.h"
@@ -49,7 +50,10 @@ public:
 
 	virtual bool SetAiDesiredRotation(const FRotator& DesiredRotation) const
 		{ return GetNpcLogicComponent() ? GetNpcLogicComponent()->SetDesiredRotation(DesiredRotation) : false; }
+
+
+	virtual void OnInteractionFinished() { if (GetNpcPlayerInteractionComponent()) GetNpcPlayerInteractionComponent()->ResetInteractionState(); } 
 	
+	virtual UNpcPlayerInteractionComponent* GetNpcPlayerInteractionComponent() const { return nullptr; }
 	virtual UNpcBaseLogicComponent* GetNpcLogicComponent() const { return nullptr; }
-	
 };

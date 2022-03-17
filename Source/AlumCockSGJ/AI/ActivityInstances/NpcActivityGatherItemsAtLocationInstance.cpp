@@ -231,15 +231,16 @@ bool UNpcActivityGatherItemsAtLocationInstance::StartInteracting(const AAIContro
 	return true;
 }
 
-bool UNpcActivityGatherItemsAtLocationInstance::StopInteracting(const AAIController* AIController,
-	FNpcActivityLatentActionStateChangedEvent* LatentActionCallback, bool bResetActorOnFail)
+float UNpcActivityGatherItemsAtLocationInstance::StopInteracting(const AAIController* AIController,
+                                                                 FNpcActivityLatentActionStateChangedEvent*
+                                                                 LatentActionCallback, bool bResetActorOnFail)
 {
-	bool bCanStopInteracting = Super::StopInteracting(AIController, LatentActionCallback, bResetActorOnFail);
-	if (!bCanStopInteracting)
-		return false;
+	
+	float SuspendDelay = Super::StopInteracting(AIController, LatentActionCallback, bResetActorOnFail);
+	if (SuspendDelay >= 0.f)
+		SetActorInteractionDataState(ENpcActorInteractionState::Releasing);
 
-	SetActorInteractionDataState(ENpcActorInteractionState::Releasing);
-	return true;
+	return SuspendDelay;
 }
 
 void UNpcActivityGatherItemsAtLocationInstance::ProgressIteration(int IterationChange)

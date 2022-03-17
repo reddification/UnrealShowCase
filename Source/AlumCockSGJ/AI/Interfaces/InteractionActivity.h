@@ -19,6 +19,7 @@ class ALUMCOCKSGJ_API IInteractionActivity
 public:
 	virtual bool StartInteracting(const AAIController* AIController, AActor* ActorToInteract,
 		FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback, bool bResetInteractionActorOnFail) { return false; }
-	virtual bool StopInteracting(const AAIController* AIController, FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
-		bool bResetInteractionActorOnFail) { return false; }
+	virtual float StopInteracting(const AAIController* AIController,
+	                              FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
+	                              bool bResetInteractionActorOnFail) { return false; }
 };

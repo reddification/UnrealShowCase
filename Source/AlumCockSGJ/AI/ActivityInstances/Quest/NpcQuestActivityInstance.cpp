@@ -29,11 +29,12 @@ void UNpcQuestActivityInstance::Resume()
 		GetOuter()->GetWorld()->GetTimerManager().UnPauseTimer(Timer);
 }
 
-void UNpcQuestActivityInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
+float UNpcQuestActivityInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
 {
-	Super::Suspend(AIController, bAbortInteraction);
 	if (AIController->GetWorld()->GetTimerManager().IsTimerActive(Timer))
 		AIController->GetWorld()->GetTimerManager().PauseTimer(Timer);
+
+	return Super::Suspend(AIController, bAbortInteraction);
 }
 
 void UNpcQuestActivityInstance::OnWorldStateChanged(const FGameplayTagContainer& NewWorldState)

@@ -9,11 +9,11 @@ void UNpcActivityFollowAlongInstance::Resume()
 	FollowedActor = nullptr;
 }
 
-void UNpcActivityFollowAlongInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
+float UNpcActivityFollowAlongInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
 {
-	Super::Suspend(AIController, bAbortInteraction);
 	auto Npc = Cast<INpcCharacter>(AIController->GetPawn());
 	Npc->ResetDesiredSpeed();
+	return Super::Suspend(AIController, bAbortInteraction);
 }
 
 void UNpcActivityFollowAlongInstance::SetFollowedActor(APawn* NewFollowedActor)

@@ -131,6 +131,10 @@ void UDialogueSubsystem::FinishDialogue()
 		if (DialogueParticipant)
 			DialogueParticipant->OnDialogueEnded();
 
+		auto NpcCharacter = Cast<INpcCharacter>(ParticipantData.Character);
+		if (NpcCharacter)
+			NpcCharacter->OnInteractionFinished();
+
 		ParticipantData.Character->InteruptVoiceLine();
 	}
 }

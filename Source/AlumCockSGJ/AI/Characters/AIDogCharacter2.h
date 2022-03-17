@@ -27,6 +27,7 @@ public:
 	virtual void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const override;
 	
 	virtual UNpcBaseLogicComponent* GetNpcLogicComponent() const override { return NpcLogicComponent; }
+	virtual UNpcPlayerInteractionComponent* GetNpcPlayerInteractionComponent() const override { return NpcPlayerInteractionComponent; }
 
 	virtual bool SetDesiredRotation(const FRotator& Rotator) override;
 	

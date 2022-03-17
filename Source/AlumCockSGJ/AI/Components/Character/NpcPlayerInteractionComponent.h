@@ -1,11 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AI/Interfaces/NpcCharacter.h"
 #include "Characters/BaseCharacter.h"
 #include "Components/ActorComponent.h"
 #include "NpcPlayerInteractionComponent.generated.h"
-
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class ALUMCOCKSGJ_API UNpcPlayerInteractionComponent : public UActorComponent
@@ -13,7 +11,8 @@ class ALUMCOCKSGJ_API UNpcPlayerInteractionComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	bool StartInteractWithCharacter(ABaseCharacter* OtherCharacter);
+	bool StartInteractWithPlayer(ABaseCharacter* OtherCharacter);
+	void ResetInteractionState() { bInteracting = false; }
 	
 protected:
 	virtual void BeginPlay() override;
@@ -25,8 +24,8 @@ protected:
 	ABaseCharacter* OwnerCharacter;
 
 	UPROPERTY()
-	TArray<ABaseCharacter*> InteractionParticipants;
-	
-	UPROPERTY()
-	TScriptInterface<INpcCharacter> NpcCharacter;
+	TScriptInterface<class INpcCharacter> NpcCharacter;
+
+private:
+	bool bInteracting = false;
 };

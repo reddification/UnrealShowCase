@@ -54,7 +54,7 @@ public:
 	const UNpcActivityBaseSettings* GetActivitySettings() const { return ActivitySettings; }
 
 	virtual void Resume();
-	virtual void Suspend(AAIController* AIController, bool bAbortInteraction);
+	virtual float Suspend(AAIController* AIController, bool bAbortInteraction);
 
 	bool IsActive() const { return bActive; }
 	virtual void SetActive(bool bActiveNew);
@@ -67,8 +67,9 @@ public:
 
 	virtual bool StartInteracting(const AAIController* AIController, AActor* ActorToInteract,
 	    FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback, bool bResetInteractionActorOnFail) override;
-	virtual bool StopInteracting(const AAIController* AIController, FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
-		bool bResetInteractionActorOnFail) override;
+	virtual float StopInteracting(const AAIController* AIController,
+	                              FNpcActivityLatentActionStateChangedEvent* InteractionCompletedCallback,
+	                              bool bResetInteractionActorOnFail) override;
 
 	virtual void ProgressIteration(int IterationChange) {}
 	virtual void SetActorToIgnore(AActor* Actor);
@@ -107,7 +108,7 @@ protected:
 	// TODO character shouldn't really be here...
 	virtual void OnInteractionStateChanged(ANpcBaseInteractiveActor* InteractiveActor, ABaseCharacter* Interactor,
 		ENpcActivityLatentActionState NpcActivityLatentActionState);
-	bool StopInteracting(const FNpcActorInteractionData* ActorInteractionData);
+	float StopInteracting(const FNpcActorInteractionData* ActorInteractionData);
 	const FNpcActorInteractionData* GetActorInteractionData() const;
 	virtual void SetActorInteractionData(AActor* Actor, ENpcActorInteractionState State);
 	virtual void SetActorInteractionDataState(ENpcActorInteractionState State);

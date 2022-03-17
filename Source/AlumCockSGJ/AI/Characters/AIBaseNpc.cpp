@@ -118,7 +118,7 @@ bool AAIBaseNpc::TrySetState(const FGameplayTag& GameplayTag)
 
 bool AAIBaseNpc::InteractWithPlayer(APlayerCharacter* Interactor)
 {
-    return NpcPlayerInteractionComponent->StartInteractWithCharacter(Interactor);
+    return NpcPlayerInteractionComponent->StartInteractWithPlayer(Interactor);
 }
 
 void AAIBaseNpc::SetNpcDTRH(const FDataTableRowHandle& InNpcDTRH)

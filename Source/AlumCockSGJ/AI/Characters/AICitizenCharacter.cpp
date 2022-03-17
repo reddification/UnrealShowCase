@@ -44,7 +44,7 @@ void AAICitizenCharacter::OnConstruction(const FTransform& Transform)
 
 bool AAICitizenCharacter::InteractWithPlayer(APlayerCharacter* Interactor)
 {
-    return NpcPlayerInteractionComponent->StartInteractWithCharacter(Interactor);
+    return NpcPlayerInteractionComponent->StartInteractWithPlayer(Interactor);
 }
 
 void AAICitizenCharacter::SetNpcDTRH(const FDataTableRowHandle& NpcDTRH)

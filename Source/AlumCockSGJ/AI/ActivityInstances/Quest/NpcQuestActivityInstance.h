@@ -15,7 +15,7 @@ class ALUMCOCKSGJ_API UNpcQuestActivityInstance : public UNpcActivityInstanceBas
 public:
 	virtual void Setup(const FNpcBehaviorActivityDescriptor& NpcBehaviorDescriptor, AAIController* AIController) override;
 	virtual void Resume() override;
-	virtual void Suspend(AAIController* AIController, bool bAbortInteraction) override;
+	virtual float Suspend(AAIController* AIController, bool bAbortInteraction) override;
 	void FinishQuestActivity(EActivityEventType Result = EActivityEventType::Completed);
 	void SetStopConditions(const AAIController* AIController, const FNpcQuestBehaviorDescriptor& QuestBehaviorDescriptor);
 	virtual void ReportActivityEvent(EActivityEventType UtilityChange) override;

@@ -60,23 +60,20 @@ bool ANpcGenericInteractionActor::TryStartNpcInteraction_Implementation(ABaseCha
 	
 	FRunningInteractionData NewInteraction(Character, InteractionMontage);
 	BeginInteraction(InteractionPositionIndex, NewInteraction);
-	Character->GetCharacterMovement()->bUseRVOAvoidance = 0;
+	Character->GetCharacterMovement()->SetAvoidanceEnabled(false);
 	// TODO disable/re-enable CMC tick?
 	return true;
 }
 
-bool ANpcGenericInteractionActor::StopNpcInteraction_Implementation(ABaseCharacter* Character, bool bInterupted)
+FNpcInteractionStopResult ANpcGenericInteractionActor::StopNpcInteraction_Implementation(
+	ABaseCharacter* Character, bool bInterupted)
 {
 	if (!IsValid(Character))
-		return false;
+		return FNpcInteractionStopResult();
 	
-	bool bCanStopInteraction = Super::StopNpcInteraction_Implementation(Character, bInterupted);
-	if (!bCanStopInteraction)
-		return false;
-
 	int CurrentInteractionIndex = GetInteractionPosition(Character);
 	if (CurrentInteractionIndex < 0)
-		return false;
+		return FNpcInteractionStopResult();
 
 	auto& RunningInteraction = InteractingCharacters[CurrentInteractionIndex];
 	auto EndSection = RunningInteraction.Montage->GetSectionIndex(MontageSectionEndLoop);
@@ -85,7 +82,7 @@ bool ANpcGenericInteractionActor::StopNpcInteraction_Implementation(ABaseCharact
 	GetWorld()->GetTimerManager().SetTimer(InteractionsTimers[CurrentInteractionIndex],
 		EndTimerDelegates[CurrentInteractionIndex], StandUpDuration, false);
 	
-	return true;
+	return FNpcInteractionStopResult(StandUpDuration);
 }
 
 void ANpcGenericInteractionActor::OnInteractionFinished(int Position)
@@ -94,7 +91,7 @@ void ANpcGenericInteractionActor::OnInteractionFinished(int Position)
 	if (IsValid(Character))
 	{
 		Character->GetCapsuleComponent()->SetCollisionProfileName(ProfileCharacterCapsule);
-		Character->GetCharacterMovement()->bUseRVOAvoidance = 1;
+		Character->GetCharacterMovement()->SetAvoidanceEnabled(true);
 		FinishInteraction(Character);
 		if (InteractionStateChangedEvent.IsBound())
 			InteractionStateChangedEvent.Broadcast(this, Character, ENpcActivityLatentActionState::Completed);

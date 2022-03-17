@@ -40,6 +40,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) 
     DefaultSpringArmOffset = SpringArmComponent->TargetArmLength;
 }
 
+#pragma region HIDE
 // void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 // {
 //     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -107,6 +108,7 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) 
     // PlayerInputComponent->BindAction("EquipPrimaryThrowable", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipPrimaryThrowable);
     // PlayerInputComponent->BindAction("EquipSecondaryThrowable", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipSecondaryThrowable);
 // }
+#pragma endregion HIDE
 
 void APlayerCharacter::BeginPlay()
 {
@@ -420,10 +422,10 @@ bool APlayerCharacter::TryStartNpcInteraction_Implementation(ABaseCharacter* Npc
     return InteractableNpc->InteractWithPlayer(this);
 }
 
-bool APlayerCharacter::StopNpcInteraction_Implementation(ABaseCharacter* Npc, bool bInterupted)
+FNpcInteractionStopResult APlayerCharacter::StopNpcInteraction_Implementation(ABaseCharacter* Npc, bool bInterupted)
 {
     PlayerNpcInteractionData.Reset();
-    return true;
+    return FNpcInteractionStopResult(0.f);
 }
 
 bool APlayerCharacter::IsNpcInteractionAvailable_Implementation(const FGameplayTag& InteractionTag) const
