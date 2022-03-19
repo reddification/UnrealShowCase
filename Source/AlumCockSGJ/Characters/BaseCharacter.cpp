@@ -241,6 +241,15 @@ bool ABaseCharacter::SetDesiredRotation(const FRotator& Rotator)
 	return true;
 }
 
+void ABaseCharacter::UnsetDesiredRotation()
+{
+	if (!BaseMovementComponent->IsForcingRotation())
+		return;
+	
+	BaseMovementComponent->UnsetDesiredRotation();
+	UpdateStrafingControls();
+}
+
 #pragma region WEAPONS
 
 bool ABaseCharacter::CanShoot() const

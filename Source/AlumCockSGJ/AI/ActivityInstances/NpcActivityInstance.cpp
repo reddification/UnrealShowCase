@@ -50,7 +50,7 @@ void UNpcActivityInstanceBase::Resume()
 		// SetInteractionActor(Blackboard, ActorInteractionData->ActorToInteract, ActorInteractionData->State);// ???
 		bInteractionRecovered = true;
 	}
-	else if (InteractionMemory.ActorToInteract && InteractionMemory.UntilWorldTime > WorldTime)
+	else if (IsValid(InteractionMemory.ActorToInteract) && InteractionMemory.UntilWorldTime > WorldTime)
 	{
 		if (INpcInteractableActor::Execute_IsNpcInteractionAvailable(InteractionMemory.ActorToInteract, FGameplayTag::EmptyTag))
 		{
@@ -81,14 +81,18 @@ float UNpcActivityInstanceBase::Suspend(AAIController* AIController, bool bAbort
 		const auto ActorInteractionData = GetActorInteractionData();
 		if (ActorInteractionData->State != ENpcActorInteractionState::None)
 		{
-			// LastActorInteractionLocation = ActorInteractionData->ActorToInteract->GetActorLocation();
-			if (ActorInteractionData->IsInteracting())
-				SuspendDelay = StopInteracting(AIController, ActiveLatentActionCallback, true);
-			else
-				ResetInteractionActor();
-
 			InteractionMemory.ActorToInteract = ActorInteractionData->ActorToInteract;
 			InteractionMemory.UntilWorldTime = GetOuter()->GetWorld()->GetTimeSeconds() + 180.f;
+			// LastActorInteractionLocation = ActorInteractionData->ActorToInteract->GetActorLocation();
+			if (ActorInteractionData->IsInteracting())
+			{
+				SuspendDelay = StopInteracting(AIController, ActiveLatentActionCallback, true);
+				const float WhatTheFuck = 0.0f;
+				AIController->GetBlackboardComponent()->SetValueAsFloat(BB_StopInteractionDelay, SuspendDelay + WhatTheFuck);
+				// NpcInteractionManager->SetCurrentNpcInteractionDataState(GetActivityId(), ENpcActorInteractionState::Approaching);
+			}
+			else
+				ResetInteractionActor();
 		}
 	}
 	else
@@ -128,6 +132,20 @@ void UNpcActivityInstanceBase::RestoreBlackboardState(UBlackboardComponent* Blac
 		return;
 
 	RestoreBlackboardStateInternal(Blackboard);
+}
+
+const AQuestLocation* UNpcActivityInstanceBase::GetCoreLocation() const
+{
+	if (!CoreLocation && !ActivitySettings->BaseActivityLocationDTRH.IsNull())
+	{
+		auto WLS = GetOuter()->GetWorld()->GetSubsystem<UWorldLocationsSubsystem>();
+		if (!WLS)
+			return nullptr;
+
+		CoreLocation = WLS->GetWorldLocation(ActivitySettings->BaseActivityLocationDTRH);
+	}
+	
+	return CoreLocation;
 }
 
 void UNpcActivityInstanceBase::RestoreBlackboardStateInternal(UBlackboardComponent* Blackboard)
@@ -317,8 +335,8 @@ void UNpcActivityInstanceBase::PrepareForInteraction()
 void UNpcActivityInstanceBase::OnInteractionStateChanged(ANpcBaseInteractiveActor* InteractiveActor, ABaseCharacter* Interactor,
 	ENpcActivityLatentActionState NpcActivityLatentActionState)
 {
-	if (!bActive)
-		return;
+	// if (!bActive || NpcActivityLatentActionState == ENpcActivityLatentActionState::Completed)
+	// 	return;
 
 	const auto ActorInteractionData = GetActorInteractionData(); 
 	auto Character = Cast<IActivityCharacterProvider>(GetOuter())->GetActivityCharacter();

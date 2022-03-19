@@ -35,5 +35,6 @@ void UNpcActivityStayInLocationInstance::RestoreBlackboardStateInternal(UBlackbo
 		bAtLocation = false;
 		FinalLocation = FVector::ZeroVector;
 	}
+	
 	Blackboard->SetValueAsBool(BB_BoolParameter1, bAtLocation);
 }

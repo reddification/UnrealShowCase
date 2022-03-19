@@ -16,6 +16,8 @@ public:
 	void SetDesiredRotation(const FRotator& Rotator);
 
 	virtual void PhysicsRotation(float DeltaTime) override;
+	void UnsetDesiredRotation() { bForceRotation = false; }
+	bool IsForcingRotation() const { return bForceRotation; }
 	mutable FDesiredRotationReachedEvent DesiredRotationReachedEvent;
 
 protected:

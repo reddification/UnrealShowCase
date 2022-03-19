@@ -9,7 +9,7 @@
 void ANpcGenericInteractionActor::BeginPlay()
 {
 	Super::BeginPlay();
-	for (auto i = 0; i < MaxInteractionsAtOnce; i++)
+	for (auto i = 0; i < ActorInteractionOptions.Num(); i++)
 	{
 		InteractionsTimers.Emplace(FTimerHandle());
 		EndTimerDelegates.Emplace(FTimerDelegate::CreateUObject(this, &ANpcGenericInteractionActor::OnInteractionFinished, i));
@@ -19,7 +19,7 @@ void ANpcGenericInteractionActor::BeginPlay()
 int ANpcGenericInteractionActor::GetAvailableInteractionPosition(const FGameplayTag& InteractionTag) const
 {
 	TArray<int> AvailablePositions;
-	for (auto i = 0; i < MaxInteractionsAtOnce; i++)
+	for (auto i = 0; i < ActorInteractionOptions.Num(); i++)
 		if (!InteractingCharacters[i].IsActive() && ActorInteractionOptions[i].InteractionTag == InteractionTag)
 			AvailablePositions.Emplace(i);
 

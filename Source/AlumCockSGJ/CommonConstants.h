@@ -69,6 +69,7 @@ const FName BB_Interest = FName("Interest");
 const FName BB_InterestState = FName("InterestState");
 const FName BB_RunningActivityType = FName("RunningActivityType");
 const FName BB_ActorInteractionState = FName("ActorInteractionState");
+const FName BB_StopInteractionDelay = FName("StopInteractionDelay");
 
 const FName BB_BoolParameter1 = FName("BoolParameter1");
 const FName BB_BoolParameter2 = FName("BoolParameter2");

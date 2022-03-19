@@ -20,8 +20,7 @@ void ANpcBaseInteractiveActor::BeginPlay()
 	Super::BeginPlay();
 	StimulusSourceComponent->RegisterForSense(TSubclassOf<UAISense_Sight>());
 	StimulusSourceComponent->RegisterWithPerceptionSystem();
-	MaxInteractionsAtOnce = ActorInteractionOptions.Num();
-	for (auto i = 0; i < MaxInteractionsAtOnce; i++)
+	for (auto i = 0; i < ActorInteractionOptions.Num(); i++)
 		InteractingCharacters.Emplace(i, nullptr);
 }
 
@@ -36,7 +35,7 @@ int ANpcBaseInteractiveActor::GetAvailableInteractionPosition(const FGameplayTag
 
 int ANpcBaseInteractiveActor::GetInteractionPosition(const ABaseCharacter* Character)
 {
-	for (auto i = 0; i < MaxInteractionsAtOnce; i++)
+	for (auto i = 0; i < ActorInteractionOptions.Num(); i++)
 		if (InteractingCharacters[i].Character == Character)
 			return i;
 
@@ -45,9 +44,7 @@ int ANpcBaseInteractiveActor::GetInteractionPosition(const ABaseCharacter* Chara
 
 void ANpcBaseInteractiveActor::RegisterNewInteraction(int InteractionOptionIndex, const FRunningInteractionData& NewInteraction)
 {
-	if (InteractionOptionIndex > MaxInteractionsAtOnce - 1)
-		return;
-
+	checkf(InteractionOptionIndex >= 0 && InteractionOptionIndex < ActorInteractionOptions.Num(), TEXT("Invalid interaction option index: %d"), InteractionOptionIndex)
 	InteractingCharacters[InteractionOptionIndex] = NewInteraction;
 	NewInteraction.Character->ChangeGameplayTags(ActorInteractionOptions[InteractionOptionIndex].InteractionTag.GetSingleTagContainer());
 	NewInteraction.DeathDelegateHandle = NewInteraction.Character->CharacterDeathEvent.AddUObject(this, &ANpcBaseInteractiveActor::OnInteractionCharacterDied);
@@ -55,7 +52,7 @@ void ANpcBaseInteractiveActor::RegisterNewInteraction(int InteractionOptionIndex
 
 void ANpcBaseInteractiveActor::UnregisterInteraction(ABaseCharacter* Character)
 {
-	for (auto i = 0; i < MaxInteractionsAtOnce; i++)
+	for (auto i = 0; i < ActorInteractionOptions.Num(); i++)
 	{
 		if (InteractingCharacters[i].Character == Character)
 		{
@@ -74,7 +71,7 @@ void ANpcBaseInteractiveActor::BeginInteraction(int InteractionOptionIndex, cons
 	InteractionCounter++;
 	if (InteractionAvailableStateChangedEvent.IsBound())
 		InteractionAvailableStateChangedEvent.Broadcast(this, InteractionCounter < MaxInteractionsAtOnce);
-	
+
 	if (InteractionCounter < MaxInteractionsAtOnce)
 		StimulusSourceComponent->RegisterWithPerceptionSystem();
 	else StimulusSourceComponent->UnregisterFromPerceptionSystem();
@@ -151,7 +148,7 @@ FNpcInteractionStopResult ANpcBaseInteractiveActor::StopNpcInteraction_Implement
 
 bool ANpcBaseInteractiveActor::GetInteractionLocation(const FGameplayTag& InteractionTag, FVector& OutLocation)
 {
-	for (auto i = 0; i < MaxInteractionsAtOnce; i++)
+	for (auto i = 0; i < ActorInteractionOptions.Num(); i++)
 	{
 		if (InteractingCharacters[i].IsActive())
 			continue;

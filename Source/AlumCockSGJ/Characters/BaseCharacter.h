@@ -84,6 +84,7 @@ public:
 	virtual bool IsConsumingStamina() const;
 	void UpdateStrafingControls();
 	virtual bool SetDesiredRotation(const FRotator& Rotator);
+	void UnsetDesiredRotation();
 	virtual FCharacterInteractionParameters GetInteractionParameters(const FGameplayTag& InteractionTag) const;
 	
 	UPROPERTY(SaveGame)

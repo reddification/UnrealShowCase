@@ -24,6 +24,7 @@ class ALUMCOCKSGJ_API UAINpcActivityComponent : public UAIBaseActivityComponent,
 			ENpcActivityType npcActivityType)
 		{
 			bStarted = false;
+			bInteractionInterrupted = false;
 			ActivityInstance = activityInstance;
 			BehaviorTree = behaviorTree;
 			ActivityNecessity = activityNecessity;
@@ -31,6 +32,7 @@ class ALUMCOCKSGJ_API UAINpcActivityComponent : public UAIBaseActivityComponent,
 		}
 		
 		bool bStarted = false;
+		bool bInteractionInterrupted = false;
 		float ActivityNecessity = 0.f;
 		ENpcActivityType NpcActivityType = ENpcActivityType::None;
 

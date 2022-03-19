@@ -320,12 +320,9 @@ void UAINpcActivityComponent::RunMaxUtilityActivity(UBehaviorTreeComponent* BTCo
 	if (RunningActivityType == ENpcActivityType::Work && MaxUtilityActivityIndex == RunningWorkActivityIndex)
 		return;
 
-	SetRunningActivityType(ENpcActivityType::Work);
-	if (RunningWorkActivityIndex >= 0)
-		NpcWorkActivities[RunningWorkActivityIndex].ActivityInstance->Suspend(OwnerController, true);
-	
 	RunningWorkActivityIndex = MaxUtilityActivityIndex;
 	auto& NewActivityWrapper = NpcWorkActivities[RunningWorkActivityIndex];
+	
 	PlannedActivity = FPlannedActivity(NewActivityWrapper.ActivityInstance, NewActivityWrapper.BehaviorTree,
 		NewActivityWrapper.ActivityNecessity, ENpcActivityType::Work);
 	PlanActivity();
@@ -352,9 +349,12 @@ void UAINpcActivityComponent::RunQuestActivity(const FNpcQuestBehaviorDescriptor
 void UAINpcActivityComponent::PlanActivity()
 {
 	float SuspendDelay = 0.f;
+	bool bInteractionInterrupted = true;//IsInteractionInterruptionRequired();
 	if (RunningActivity)
-		SuspendDelay = RunningActivity->Suspend(OwnerController, IsInteractionInterruptionRequired());
+		SuspendDelay = RunningActivity->Suspend(OwnerController, bInteractionInterrupted);
 
+	PlannedActivity.bInteractionInterrupted = bInteractionInterrupted;
+	// SuspendDelay = 0.f;
 	if (SuspendDelay <= 0.f)
 		LaunchPlannedActivity();
 	else
@@ -367,10 +367,15 @@ void UAINpcActivityComponent::LaunchPlannedActivity()
 		return;
 
 	auto BTComponent = GetBehaviorTreeComponent();
-	RunningActivity = PlannedActivity.ActivityInstance;
+
 	// hacky hacky mf
+	if (PlannedActivity.bInteractionInterrupted)
+		ResetActorInteractionData();
+
+	RunningActivity = PlannedActivity.ActivityInstance;
 	BTComponent->GetBlackboardComponent()->ClearValue(BB_ActorToInteract);
 	BTComponent->GetBlackboardComponent()->ClearValue(BB_ActorInteractionState);
+	
 	BTComponent->GetBlackboardComponent()->SetValueAsFloat(BB_WorkUtility, PlannedActivity.ActivityNecessity);
 	BTComponent->SetDynamicSubtree(RunningActivityTag, PlannedActivity.BehaviorTree);
 	SetRunningActivityType(PlannedActivity.NpcActivityType);

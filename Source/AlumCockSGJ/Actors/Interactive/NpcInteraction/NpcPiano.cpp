@@ -33,16 +33,15 @@ bool ANpcPiano::TryStartNpcInteraction_Implementation(ABaseCharacter* Character,
 		return false;
 
 	auto PlayMontage = InteractionParameters.InteractionMontage;
-	Character->GetCapsuleComponent()->SetCollisionProfileName(ProfileNoCollision);
+	Character->GetCapsuleComponent()->SetCollisionProfileName(ProfileNoCollisionInteraction);
 	
 	FVector RelativeCharacterLocation = ActorInteractionOptions[0].InteractionPosition;
 	FRotator Rotator = GetActorRotation();
+	Character->UnsetDesiredRotation();
 	Character->SetActorRotation(Rotator); // won't need with a proper sit down animation with root motion
 	Character->SetActorLocation(GetActorLocation() + Rotator.RotateVector(RelativeCharacterLocation));
-	// Character->SetActorRotation(RelativeCharacterLocation.ToOrientationQuat());
 	
 	Character->PlayAnimMontage(PlayMontage);
-	// Character->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(SittingMontageEndedEvent, SitMontage);
 	BeginInteraction(0, FRunningInteractionData(Character, PlayMontage));
 	float SitDuration = PlayMontage->GetSectionLength(PlayMontage->GetSectionIndex("Default"));
 	GetWorld()->GetTimerManager().SetTimer(SitTimer, this, &ANpcPiano::OnSat, SitDuration);
@@ -54,9 +53,13 @@ FNpcInteractionStopResult ANpcPiano::StopNpcInteraction_Implementation(ABaseChar
 {
 	if (!IsValid(Character))
 		return FNpcInteractionStopResult();
-	
+
+	AudioComponent->Stop();
 	auto& InteractionData = InteractingCharacters[0];
 	auto PlayMontage = InteractionData.Montage;
+	if (!PlayMontage)
+		return FNpcInteractionStopResult(0.f);
+	
 	Character->GetMesh()->GetAnimInstance()->Montage_JumpToSection(MontageSectionEndLoop, PlayMontage);
 	float StandUpDuration = PlayMontage->GetSectionLength(PlayMontage->GetSectionIndex(MontageSectionEndLoop));
 	GetWorld()->GetTimerManager().SetTimer(StandUpTimer,this, &ANpcPiano::OnStoodUp, StandUpDuration);
@@ -71,7 +74,6 @@ void ANpcPiano::OnSat()
 
 void ANpcPiano::OnStoodUp()
 {
-	AudioComponent->Stop();
 	auto Character = InteractingCharacters[0].Character;
 	Character->GetCapsuleComponent()->SetCollisionProfileName(ProfileCharacterCapsule);
 	// Character->GetCharacterMovement()->bUseRVOAvoidance = 1;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actors/Interactive/Environment/QuestLocation.h"
 #include "AI/BehaviorTrees/Tasks/Activities/BTTask_RunActivityEQSQuery.h"
 #include "AI/Data/NpcActorInteractionData.h"
 #include "AI/Data/DelegatesAI.h"
@@ -13,7 +14,6 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "NpcActivityInstance.generated.h"
 
-class AQuestLocation;
 class UNpcActivityBaseSettings;
 class AAICitizenController;
 class UMLGameInstance;
@@ -81,7 +81,7 @@ public:
 	FActivityProgressEvent ActivityProgressEvent;
 	FNpcActivityStateChangedEvent NpcActivityStateChangedEvent;
 	
-	const AQuestLocation* GetCoreLocation() const { return CoreLocation; }
+	const AQuestLocation* GetCoreLocation() const;
 	
 protected:
 	virtual void RestoreBlackboardStateInternal(UBlackboardComponent* Blackboard);
@@ -91,7 +91,7 @@ protected:
 	const UNpcActivityBaseSettings* ActivitySettings;
 
 	UPROPERTY()
-	const AQuestLocation* CoreLocation;
+	const mutable AQuestLocation* CoreLocation;
 	
 	bool bActive = false;
 

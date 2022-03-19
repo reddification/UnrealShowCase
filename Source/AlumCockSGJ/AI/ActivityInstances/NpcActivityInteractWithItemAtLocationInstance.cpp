@@ -128,7 +128,9 @@ const UNpcActivityInteractWithItemSettings* UNpcActivityInteractWithItemAtLocati
 
 float UNpcActivityInteractWithItemAtLocationInstance::Suspend(AAIController* AIController, bool bAbortInteraction)
 {
-	GetOuter()->GetWorld()->GetTimerManager().ClearTimer(InteractionTimer);
+	if (bAbortInteraction)
+		GetOuter()->GetWorld()->GetTimerManager().ClearTimer(InteractionTimer);
+	
 	return Super::Suspend(AIController, bAbortInteraction);
 }
 
