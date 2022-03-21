@@ -14,16 +14,14 @@ void UNpcSubsystem::RegisterNpc(const FDataTableRowHandle& DTRH, ABaseCharacter*
 {
 	if (DTRH.IsNull())
 		return;
+	
+	FNpcDTR* NpcDTR = DTRH.GetRow<FNpcDTR>("");
+	if (!NpcDTR || NpcDTR->bUnique && Npcs.Contains(DTRH.RowName))
+		return;
 
 	auto NpcCharacter = Cast<INpcCharacter>(Npc);
 	if (NpcCharacter && NpcCharacter->GetNpcLogicComponent())
 		NpcCharacter->GetNpcLogicComponent()->NpcDiedEvent.AddUObject(this, &UNpcSubsystem::OnNpcDied);
-
-	FNpcDTR* NpcDTR = DTRH.GetRow<FNpcDTR>("");
-	if (!NpcDTR)
-		return;
-
-	checkf(!NpcDTR->bUnique || !Npcs.Contains(DTRH.RowName), TEXT("Attempting to spawn unique NPC %s again"), *DTRH.ToDebugString());
 	
 	Npcs.Add(DTRH.RowName, Npc);
 }
