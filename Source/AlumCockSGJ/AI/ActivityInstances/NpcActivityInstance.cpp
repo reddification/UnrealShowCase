@@ -18,7 +18,7 @@ void UNpcActivityInstanceBase::Setup(const FNpcBehaviorActivityDescriptor& NpcBe
 	{
 		auto WLS = AIController->GetWorld()->GetSubsystem<UWorldLocationsSubsystem>();
 		if (WLS)
-			CoreLocation = WLS->GetWorldLocation(ActivitySettings->BaseActivityLocationDTRH);
+			CoreLocation = WLS->GetWorldLocationRandom(ActivitySettings->BaseActivityLocationDTRH);
 	}
 
 	NpcInteractionManager = Cast<INpcInteractionManager>(GetOuter());
@@ -142,7 +142,7 @@ const AQuestLocation* UNpcActivityInstanceBase::GetCoreLocation() const
 		if (!WLS)
 			return nullptr;
 
-		CoreLocation = WLS->GetWorldLocation(ActivitySettings->BaseActivityLocationDTRH);
+		CoreLocation = WLS->GetWorldLocationRandom(ActivitySettings->BaseActivityLocationDTRH);
 	}
 	
 	return CoreLocation;
@@ -154,7 +154,7 @@ void UNpcActivityInstanceBase::RestoreBlackboardStateInternal(UBlackboardCompone
 	if (!WLS)
 		return;
 	
-	Blackboard->SetValueAsObject(BB_ActivityCoreLocationVector, WLS->GetWorldLocation(ActivitySettings->BaseActivityLocationDTRH));
+	Blackboard->SetValueAsObject(BB_ActivityCoreLocationVector, WLS->GetWorldLocationRandom(ActivitySettings->BaseActivityLocationDTRH));
 	const auto ActorInteractionData = GetActorInteractionData();
 	if (!ActorInteractionData->IsNone())
 	{

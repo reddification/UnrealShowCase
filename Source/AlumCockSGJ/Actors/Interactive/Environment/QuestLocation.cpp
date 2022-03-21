@@ -4,6 +4,7 @@
 #include "Characters/Controllers/BasePlayerController.h"
 #include "Components/BoxComponent.h"
 #include "Components/QuestGiverComponent.h"
+#include "Data/Quests/QuestLocationDTR.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Subsystems/QuestSubsystem.h"
 #include "Subsystems/WorldLocationsSubsystem.h"
@@ -20,6 +21,13 @@ AQuestLocation::AQuestLocation()
 void AQuestLocation::BeginPlay()
 {
 	Super::BeginPlay();
+	if (QuestLocationDTRH.DataTable && !QuestLocationDTRH.RowName.IsNone())
+	{
+		auto QuestLocationDTR = QuestLocationDTRH.GetRow<FQuestLocationDTR>("");
+		if (QuestLocationDTR)
+			bQuestLocation = QuestLocationDTR->bQuestLocation;
+	}
+	
 	CollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AQuestLocation::OnOverlapped);
 	CollisionComponent->OnComponentEndOverlap.AddDynamic(this, &AQuestLocation::OnExit);
 	auto WLS = GetWorld()->GetSubsystem<UWorldLocationsSubsystem>();

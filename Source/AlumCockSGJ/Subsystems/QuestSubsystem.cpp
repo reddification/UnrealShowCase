@@ -854,5 +854,5 @@ const AQuestLocation* UQuestSubsystem::GetQuestLocation(const FDataTableRowHandl
 	if (!WLS)
 		return nullptr;
 
-	return WLS->GetWorldLocation(SpawnLocationDTRH);
+	return WLS->GetClosestQuestLocationSimple(SpawnLocationDTRH, PlayerCharacter->GetActorLocation());
 }

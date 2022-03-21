@@ -112,7 +112,7 @@ bool UNpcActivityGatherItemsAtLocationInstance::FindNextLocation(const AAIContro
 			break;
 	}
 	
-	auto WorldLocation = WorldLocationsSubsystem->GetWorldLocation(LocationDTRH);
+	auto WorldLocation = WorldLocationsSubsystem->GetWorldLocationRandom(LocationDTRH);
 	if (!WorldLocation)
 		return false;
 

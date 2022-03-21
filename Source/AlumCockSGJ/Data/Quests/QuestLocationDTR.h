@@ -7,9 +7,12 @@ struct FQuestLocationDTR : public FTableRowBase
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FText Name;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FText Description;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bQuestLocation = false;
 };

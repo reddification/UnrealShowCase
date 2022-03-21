@@ -27,10 +27,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, SaveGame, meta=(RowType="QuestLocationDTR"))
 	FDataTableRowHandle QuestLocationDTRH;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bQuestLocation = false;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FGameplayTag LocationGameplayTag;
 
@@ -41,6 +38,8 @@ protected:
 	class UBoxComponent* CollisionComponent;
 
 private:
+	bool bQuestLocation = false;
+
 	UFUNCTION()
 	void OnOverlapped(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

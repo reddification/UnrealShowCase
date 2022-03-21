@@ -12,10 +12,9 @@ class ALUMCOCKSGJ_API UWorldLocationsSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	void CacheQuestLocations();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	AQuestLocation* GetWorldLocation(const FDataTableRowHandle& QuestLocationDTRH);
+	AQuestLocation* GetWorldLocationRandom(const FDataTableRowHandle& QuestLocationDTRH);
     
 	const AQuestLocation* GetClosestQuestLocationSimple(const FDataTableRowHandle& QuestLocationDTRH,
 														const FVector& QuerierLocation);
@@ -28,8 +27,7 @@ public:
 
 private:
 	// TODO leave only TMap and its related functions
-	TArray<AQuestLocation*> QuestLocations;
+	// TArray<AQuestLocation*> QuestLocations;
 
 	TMultiMap<FName, AQuestLocation*> QuestLocationsMap;
-	// TMap<FDataTableRowHandle, FQuestLocationsWrapper> QuestLocationsMap;
 };

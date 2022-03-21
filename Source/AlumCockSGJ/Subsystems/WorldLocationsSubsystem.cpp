@@ -4,73 +4,37 @@
 #include "Actors/Interactive/Environment/QuestLocation.h"
 #include "Kismet/GameplayStatics.h"
 
-void UWorldLocationsSubsystem::CacheQuestLocations()
-{
-	// TArray<AActor*> QuestLocationsActors;
-	// auto World = GetWorld();
-	// UGameplayStatics::GetAllActorsOfClass(World, AQuestLocation::StaticClass(), QuestLocationsActors);
-	//
-	// QuestLocations.Reset();
-	// for (AActor* QuestLocationActor : QuestLocationsActors)
-	// {
-	// 	AQuestLocation* QuestLocation = Cast<AQuestLocation>(QuestLocationActor);
-	// 	if (IsValid(QuestLocation))
-	// 	{
-	// 		QuestLocations.Add(QuestLocation);
-	// 		QuestLocationsMap.Add(QuestLocation->GetLocationDTRH().RowName, QuestLocation);
-	// 	}
-	// }
-}
-
 void UWorldLocationsSubsystem::RegisterWorldLocation(AQuestLocation* QuestLocation)
 {
 	if (!IsValid(QuestLocation))
 		return;
 	
-	QuestLocations.Add(QuestLocation);
 	QuestLocationsMap.Add(QuestLocation->GetLocationDTRH().RowName, QuestLocation);
 }
 
 void UWorldLocationsSubsystem::UnregisterWorldLocation(const FDataTableRowHandle& LocationDTRH)
 {
-	QuestLocations.RemoveAllSwap([LocationDTRH](AQuestLocation* QuestLocation)
-	{
-		return IsValid(QuestLocation)
-			? QuestLocation->GetLocationDTRH() == LocationDTRH
-			: true;
-	});
-
 	QuestLocationsMap.Remove(LocationDTRH.RowName);
 }
-
-
 
 void UWorldLocationsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	CacheQuestLocations();
 }
 
-AQuestLocation* UWorldLocationsSubsystem::GetWorldLocation(const FDataTableRowHandle& QuestLocationDTRH)
+AQuestLocation* UWorldLocationsSubsystem::GetWorldLocationRandom(const FDataTableRowHandle& QuestLocationDTRH)
 {
-	if (QuestLocations.Num() == 0)
-		CacheQuestLocations();
-	
-	for (const auto QuestLocation : QuestLocations)
-	{
-		if (QuestLocation->GetLocationDTRH() == QuestLocationDTRH)
-			return QuestLocation;
-	}
+	TArray<AQuestLocation*> QuestLocationsArray;
+	QuestLocationsMap.MultiFind(QuestLocationDTRH.RowName, QuestLocationsArray);
+	if (QuestLocationsArray.Num() == 0)
+		return nullptr;
 
-	return nullptr;
+	return QuestLocationsArray[FMath::RandRange(0, QuestLocationsArray.Num() - 1)];
 }
 
 const AQuestLocation* UWorldLocationsSubsystem::GetClosestQuestLocationSimple(const FDataTableRowHandle& QuestLocationDTRH,
 	const FVector& QuerierLocation)
 {
-	if (QuestLocations.Num() == 0)
-		CacheQuestLocations();
-	
 	TArray<AQuestLocation*> QuestLocationsArray;
 	QuestLocationsMap.MultiFind(QuestLocationDTRH.RowName, QuestLocationsArray);
 	if (QuestLocationsArray.Num() == 1)
@@ -97,9 +61,6 @@ const AQuestLocation* UWorldLocationsSubsystem::GetClosestQuestLocationSimple(co
 const AQuestLocation* UWorldLocationsSubsystem::GetClosestQuestLocationComplex(const FDataTableRowHandle& QuestLocationDTRH,
 	const FVector& QuerierLocation, UObject* WorldContextObject)
 {
-	if (QuestLocations.Num() == 0)
-		CacheQuestLocations();
-	
 	TArray<AQuestLocation*> QuestLocationsArray;
 	QuestLocationsMap.MultiFind(QuestLocationDTRH.RowName, QuestLocationsArray);
 	if (QuestLocationsArray.Num() == 1)
