@@ -96,7 +96,7 @@ void UCharacterCombatComponent::TryThrow()
 		const float PlayRate = ThrowMontage->GetPlayLength() / ActiveThrowable->GetThrowDuration();
 		CharacterOwner->GetEquipmentComponent()->PutActiveItemInSecondaryHand();
 		CharacterOwner->PlayAnimMontage(ThrowMontage, PlayRate);
-		GetWorld()->GetTimerManager().SetTimer(ThrowTimer, this, &UCharacterCombatComponent::ResetCharacterCollisionType,
+		GetWorld()->GetTimerManager().SetTimer(ResetCollisionTimer, this, &UCharacterCombatComponent::ResetCharacterCollisionType,
 			ActiveThrowable->GetThrowDuration() * PlayRate);
 	}
 	else

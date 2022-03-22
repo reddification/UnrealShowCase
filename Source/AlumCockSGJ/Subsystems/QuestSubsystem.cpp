@@ -99,6 +99,9 @@ void UQuestSubsystem::OnNpcKilled(const AActor* NPC)
 
 			auto QuestTaskDTR = QuestTaskInfo.GetQuestTaskDTR();
 			const auto& NPCsKilledTrigger = QuestTaskDTR->TaskCompletedTriggers.NPCsKilled;
+			if (!NPCsKilledTrigger.ActorType)
+				continue;
+
 			if (NPC->IsA(NPCsKilledTrigger.ActorType) && HasRequiredGameplayTags(Cast<IGameplayTagAssetInterface>(NPC), NPCsKilledTrigger.WithGameplayTags))
 			{
 				QuestTaskInfo.CountProgress++;
@@ -366,6 +369,15 @@ bool UQuestSubsystem::IsItemRequirementsMatching(const FQuestRequirementItemFilt
 		default:
 			return true;
 	}
+}
+
+void UQuestSubsystem::Load()
+{
+	ActiveQuests.Empty();
+	CompletedQuests.Empty();
+	auto WSS = GetGameInstance()->GetSubsystem<UWorldStateSubsystem>();
+	if (WSS)
+		WSS->Load();
 }
 
 bool UQuestSubsystem::CheckIfComplyWithQuestRequirements(const FQuestDTR* QuestDTR) const

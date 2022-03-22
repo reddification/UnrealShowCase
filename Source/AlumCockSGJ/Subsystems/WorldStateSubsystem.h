@@ -16,6 +16,7 @@ public:
 	void ChangeWorldState(const FGameplayTagContainer& TagsContainer, bool bAdd = true);
 	bool IsWorldStateMatches(const FGameplayTagQuery& WorldStateTagQuery) const;
 	const FGameplayTagContainer& GetWorldState() const { return WorldState; }
+	void Load();
 
 	mutable FWorldStateChangedEvent WorldStateChangedEvent;
 	

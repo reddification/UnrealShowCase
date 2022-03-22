@@ -58,6 +58,9 @@ public:
 	
 	bool IsItemRequirementsMatching(const FQuestRequirementItemFilter& ItemFilters) const;
 	
+	UFUNCTION(BlueprintCallable)
+	void Load();
+	
 private:
 	
     UPROPERTY()

@@ -21,3 +21,8 @@ bool UWorldStateSubsystem::IsWorldStateMatches(const FGameplayTagQuery& WorldSta
 {
 	return WorldStateTagQuery.IsEmpty() || WorldStateTagQuery.Matches(WorldState);
 }
+
+void UWorldStateSubsystem::Load()
+{
+	WorldState.Reset();
+}

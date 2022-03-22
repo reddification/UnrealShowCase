@@ -55,6 +55,7 @@ private:
 	bool bMeleeAttack = false;
 	void OnShot(UAnimMontage* Montage);
 	FTimerHandle ThrowTimer;
+	FTimerHandle ResetCollisionTimer;
 	FTimerHandle MeleeAttackTimer;
 	void ResetCharacterCollisionType();
 };
