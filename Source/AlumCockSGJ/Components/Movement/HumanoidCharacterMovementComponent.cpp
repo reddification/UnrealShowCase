@@ -20,6 +20,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Utils/TraceUtils.h"
 
 void UHumanoidCharacterMovementComponent::BeginPlay()
 {
@@ -1040,7 +1041,7 @@ void UHumanoidCharacterMovementComponent::ResetFromSliding()
 		Prone();
 	}
 
-	SlideData.FloorAngle = 0.f;
+	SlideData.FloorAnglePitch = 0.f;
 	SlideData.bCanSlide = false;
 	GetWorld()->GetTimerManager().ClearTimer(SlideData.TimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(SlideData.CooldownTimerHandle, this,
@@ -1058,13 +1059,17 @@ void UHumanoidCharacterMovementComponent::PhysCustomSliding(float DeltaTime, int
 	FHitResult FloorCheckHit;
 	FCollisionQueryParams FloorCheckCollisionQueryParams;
 	FloorCheckCollisionQueryParams.AddIgnoredActor(CharacterOwner);
-	const auto CapsuleShape = CharacterOwner->GetCapsuleComponent()->GetCollisionShape();
+	auto CapsuleShape = CharacterOwner->GetCapsuleComponent()->GetCollisionShape();
+	CapsuleShape.Capsule.Radius *= 1.5f; 
 	const float TraceDepth = 3.f;
-	const FVector FloorTraceStartLocation = GetActorLocation();
+	const FVector FloorTraceStartLocation = GetActorLocation() + CharacterOwner->GetActorUpVector() * CapsuleShape.Capsule.HalfHeight;
+	// const FVector FloorTraceEndLocation = FloorTraceStartLocation - CharacterOwner->GetActorUpVector() * TraceDepth;
+	const FVector FloorTraceEndLocation = GetActorLocation() - CharacterOwner->GetActorUpVector() * TraceDepth;
+	
 	bool bApplyGravity = !GetWorld()->SweepSingleByChannel(FloorCheckHit, FloorTraceStartLocation,
-		FloorTraceStartLocation - CharacterOwner->GetActorUpVector() * TraceDepth,
-		FQuat::Identity, ECC_Visibility, CapsuleShape, FloorCheckCollisionQueryParams);
+		FloorTraceEndLocation, FQuat::Identity, ECC_Visibility, CapsuleShape, FloorCheckCollisionQueryParams);
 	bool bDescending = true;
+
 	if (!bApplyGravity)
 	{
 		SlideData.VerticalSpeed = 0.f;
@@ -1077,9 +1082,20 @@ void UHumanoidCharacterMovementComponent::PhysCustomSliding(float DeltaTime, int
 			const float SurfaceToForwardDP = FVector::DotProduct(FloorCheckHit.ImpactNormal, ProjectedActorForwardVector);
 			bDescending = SurfaceToForwardDP >= 0.f;
 			const float FloorAngle = FMath::Abs(90.f - FMath::RadiansToDegrees(FMath::Acos(SurfaceToForwardDP)));
-			SlideData.FloorAngle = FloorAngle;
-			SlideData.FloorAngleSin = FMath::Sin(FMath::DegreesToRadians(SlideData.FloorAngle));
-			SlideData.FloorAngleCos = FMath::Cos(FMath::DegreesToRadians(SlideData.FloorAngle));
+			SlideData.FloorAnglePitch = FloorAngle;
+			SlideData.FloorAnglePitchSin = FMath::Sin(FMath::DegreesToRadians(SlideData.FloorAnglePitch));
+			SlideData.FloorAnglePitchCos = FMath::Cos(FMath::DegreesToRadians(SlideData.FloorAnglePitch));
+
+			// FVector RightVector = FVector::RightVector;
+			FVector RightVector = CharacterOwner->GetActorRightVector();
+			RightVector.Z = 0.f;
+			RightVector = RightVector.GetSafeNormal();
+			const float SurfaceToRightDP = FVector::DotProduct(FloorCheckHit.ImpactNormal, RightVector);
+			const float SurfaceToUpDP = FVector::DotProduct(FloorCheckHit.ImpactNormal, FVector::UpVector);
+			bool bLeftSide = SurfaceToRightDP < 0.f;
+			SlideData.FloorAngleRoll = FMath::RadiansToDegrees(FMath::Acos(SurfaceToUpDP));
+			if (bLeftSide)
+				SlideData.FloorAngleRoll *= -1.f;
 		}
 	}
 	else
@@ -1094,7 +1110,7 @@ void UHumanoidCharacterMovementComponent::PhysCustomSliding(float DeltaTime, int
 
 	const float DirectionFactor = bDescending ? 1.f : -1.f;
 	SlideData.Speed = SlideData.Speed
-		+ DeltaTime * G * (DirectionFactor * SlideData.FloorAngleSin - SlideSettings->DeccelerationRate * SlideData.FloorAngleCos);
+		+ DeltaTime * G * (DirectionFactor * SlideData.FloorAnglePitchSin - SlideSettings->DeccelerationRate * SlideData.FloorAnglePitchCos);
 	
 	if (SlideData.Speed < 0.f)
 	{
@@ -1102,15 +1118,16 @@ void UHumanoidCharacterMovementComponent::PhysCustomSliding(float DeltaTime, int
 		return;
 	}
 
-	FRotator CharacterRotation = CharacterOwner->GetActorRotation();
-	CharacterRotation.Pitch = FMath::FInterpTo(CharacterRotation.Pitch, -DirectionFactor * SlideData.FloorAngle,
-		DeltaTime, SlideSettings->PitchInterpolationSpeed);
+	auto CharacterRotation = CharacterOwner->GetActorRotation();
+	FRotator NextRotator = FRotator(SlideData.FloorAnglePitch, CharacterRotation.Yaw, SlideData.FloorAngleRoll);
+	// GEngine->AddOnScreenDebugMessage(200, 5, FColor::Cyan, FString::Printf(TEXT("R: [%s]"),
+	// 	*NextRotator.ToString()));
+	
+	CharacterRotation = FMath::RInterpTo(CharacterRotation, NextRotator, DeltaTime, SlideSettings->PitchInterpolationSpeed);
 
 	Velocity = FMath::Max(SlideData.Speed, 0.f) * CharacterRotation.Vector();
 	if (bApplyGravity)
-	{
 		Velocity.Z = SlideData.VerticalSpeed;
-	}
 	
 	FHitResult Hit;
 	bool bHit = SafeMoveUpdatedComponent(Velocity * DeltaTime, CharacterRotation, true, Hit);
