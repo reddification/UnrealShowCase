@@ -3,6 +3,11 @@ This project is a showcase of my UE4 learning progress.
 Binary assets are stored in git LFS so initializing it when cloning is required.
 None of the models/textures/sounds/level design is made by me. All assets and code are provided only for demonstration purposes. Everything (except for the demo level) that is **not** mentioned below is made by me.
 
+## Links
+- Latest build: https://drive.google.com/drive/folders/1wwtARu8W1fBJWhLUUw78owmmbDOOhdPY?usp=sharing
+- Videos with gameplay demo: coming soon
+- Videos with implementation details: coming soon
+
 ## Content
 There are 2 main maps: 
 1. Demo map which contains various movement mechanics, interactable items, weapons and basic AI
@@ -26,6 +31,7 @@ Thanks to all these people for providing following assets
 - R_temj#6147
 - Алексей Провейс#1965
 - PbICb259#5261
+- 
 ### Level Design
 - Semen Zuev#2012
 ### Sound design
