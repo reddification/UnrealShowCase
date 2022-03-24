@@ -1060,14 +1060,15 @@ void UHumanoidCharacterMovementComponent::PhysCustomSliding(float DeltaTime, int
 	FCollisionQueryParams FloorCheckCollisionQueryParams;
 	FloorCheckCollisionQueryParams.AddIgnoredActor(CharacterOwner);
 	auto CapsuleShape = CharacterOwner->GetCapsuleComponent()->GetCollisionShape();
-	CapsuleShape.Capsule.Radius *= 1.5f; 
+	CapsuleShape.Capsule.Radius *= 1.3f; 
 	const float TraceDepth = 3.f;
 	const FVector FloorTraceStartLocation = GetActorLocation() + CharacterOwner->GetActorUpVector() * CapsuleShape.Capsule.HalfHeight;
 	// const FVector FloorTraceEndLocation = FloorTraceStartLocation - CharacterOwner->GetActorUpVector() * TraceDepth;
 	const FVector FloorTraceEndLocation = GetActorLocation() - CharacterOwner->GetActorUpVector() * TraceDepth;
-	
+
+	FQuat Rotation = CharacterOwner->GetActorQuat();
 	bool bApplyGravity = !GetWorld()->SweepSingleByChannel(FloorCheckHit, FloorTraceStartLocation,
-		FloorTraceEndLocation, FQuat::Identity, ECC_Visibility, CapsuleShape, FloorCheckCollisionQueryParams);
+		FloorTraceEndLocation, Rotation, ECC_Visibility, CapsuleShape, FloorCheckCollisionQueryParams);
 	bool bDescending = true;
 
 	if (!bApplyGravity)
@@ -1082,7 +1083,7 @@ void UHumanoidCharacterMovementComponent::PhysCustomSliding(float DeltaTime, int
 			const float SurfaceToForwardDP = FVector::DotProduct(FloorCheckHit.ImpactNormal, ProjectedActorForwardVector);
 			bDescending = SurfaceToForwardDP >= 0.f;
 			const float FloorAngle = FMath::Abs(90.f - FMath::RadiansToDegrees(FMath::Acos(SurfaceToForwardDP)));
-			SlideData.FloorAnglePitch = FloorAngle;
+			SlideData.FloorAnglePitch = FloorAngle;// * 0.8f;
 			SlideData.FloorAnglePitchSin = FMath::Sin(FMath::DegreesToRadians(SlideData.FloorAnglePitch));
 			SlideData.FloorAnglePitchCos = FMath::Cos(FMath::DegreesToRadians(SlideData.FloorAnglePitch));
 

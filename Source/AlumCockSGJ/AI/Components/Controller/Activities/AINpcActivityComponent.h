@@ -90,6 +90,7 @@ private:
 	UPROPERTY()
 	TArray<FNpcWorkActivityWrapper> NpcWorkActivities;
 
+	UPROPERTY()
 	FNpcQuestActivityWrapper RunningQuestActivity;
 
 	UPROPERTY()
