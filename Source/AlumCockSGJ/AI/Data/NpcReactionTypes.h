@@ -33,7 +33,6 @@ struct FReactionEvent
 	// EReactionSource ReactionSource;
 };
 
-
 USTRUCT()
 struct FPropagatedFeelingsData
 {

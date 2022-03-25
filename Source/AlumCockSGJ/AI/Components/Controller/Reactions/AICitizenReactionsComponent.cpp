@@ -390,12 +390,13 @@ void UAICitizenReactionsComponent::OnSeeGoodGuy(ABaseCharacter* ObservedCharacte
 		}
 		else
 		{
-			float PropagationDistanceFactor = FeelingPropagationSettings->AnxietyPropagationFactorDistanceDependency
-				? FeelingPropagationSettings->AnxietyPropagationFactorDistanceDependency->GetFloatValue(ActorsDistance / FeelingPropagationSettings->MaxAnxietyPropagationDistance)
-				: 1.f;
-			float CalmDownEffect = AnxietyPropagation.FeelingLevel * FeelingPropagationSettings->FeelingPropagationFactor * PropagationDistanceFactor - Anxiety;
-			// CalmDownEffect must be < 0 always in this case
-			CalmDown(-CalmDownEffect);
+			// doesn't really look nice
+			// float PropagationDistanceFactor = FeelingPropagationSettings->AnxietyPropagationFactorDistanceDependency
+			// 	? FeelingPropagationSettings->AnxietyPropagationFactorDistanceDependency->GetFloatValue(ActorsDistance / FeelingPropagationSettings->MaxAnxietyPropagationDistance)
+			// 	: 1.f;
+			// float CalmDownEffect = AnxietyPropagation.FeelingLevel * FeelingPropagationSettings->FeelingPropagationFactor * PropagationDistanceFactor - Anxiety;
+			// // CalmDownEffect must be < 0 always in this case
+			// CalmDown(-CalmDownEffect);
 		}
 		
 		if (InterestPropagation.FeelingLevel > Interest)
