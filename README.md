@@ -4,9 +4,9 @@ Binary assets are stored in git LFS so initializing it when cloning is required.
 None of the models/textures/sounds/level design is made by me. All assets and code are provided only for demonstration purposes. Everything (except for the demo level) that is **not** mentioned below is made by me.
 
 ## Links
-- Latest build: https://drive.google.com/drive/folders/1wwtARu8W1fBJWhLUUw78owmmbDOOhdPY?usp=sharing
-- Videos with gameplay demo: coming soon
-- Videos with implementation details: coming soon
+- Latest build (25.03.2022): https://drive.google.com/drive/folders/1wwtARu8W1fBJWhLUUw78owmmbDOOhdPY?usp=sharing
+- Videos with gameplay mechanics: https://www.youtube.com/playlist?list=PLiJKc2Gbr2wOYhR1yF6F6YSo-RV3zbNrt
+- Videos with advanced NPCs and quest system: coming soon (yt has limitations for uploading per day)
 
 ## Content
 There are 2 main maps: 
