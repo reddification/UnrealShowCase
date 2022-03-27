@@ -6,7 +6,7 @@ None of the models/textures/sounds/level design is made by me. All assets and co
 ## Links
 - Latest build (25.03.2022): https://drive.google.com/drive/folders/1wwtARu8W1fBJWhLUUw78owmmbDOOhdPY?usp=sharing
 - Videos with gameplay mechanics: https://www.youtube.com/playlist?list=PLiJKc2Gbr2wOYhR1yF6F6YSo-RV3zbNrt
-- Videos with advanced NPCs and quest system: coming soon (yt has limitations for uploading per day)
+- Videos with advanced NPCs and quest system: https://drive.google.com/drive/folders/1MkuihHw7t5d347GAhEhRk2Y3ArwL6sxu?usp=sharing (yt coming soon. they have limitations for uploading per day)
 
 ## Content
 There are 2 main maps: 
