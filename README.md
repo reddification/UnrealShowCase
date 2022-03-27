@@ -14,7 +14,7 @@ There are 2 main maps:
 2. CardboardCity which contains quest system and advanced NPC lifecycle demonstration. This level is a continuation of Autumn 2021 Siberian GameJam submission: https://aluminum-cockroachs.itch.io/murphyslaw which was mostly based on my code base
 
 
-Thanks to all these people for providing following assets
+## Special Thanks to all these people for providing the following assets ##
 ### Characters:
 - Конастинти Тучкинс#3468 (modelling, texturing, rigging)
 - Алексей Провейс#1965 (modelling, texturing)
@@ -31,7 +31,6 @@ Thanks to all these people for providing following assets
 - R_temj#6147
 - Алексей Провейс#1965
 - PbICb259#5261
-- 
 ### Level Design
 - Semen Zuev#2012
 ### Sound design
