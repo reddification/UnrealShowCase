@@ -3,6 +3,8 @@ This project is a showcase of my UE4 learning progress.
 Binary assets are stored in git LFS so initializing it when cloning is required.
 None of the models/textures/sounds/level design is made by me. All assets and code are provided only for demonstration purposes. Everything (except for the demo level) that is **not** mentioned below is made by me.
 
+P.S. There seems to be a problem with billing my account due to sanctions on russian banks so the repository might be unclonable for some time until I find another way to pay for it 
+
 ## Links
 - Latest build (25.03.2022): https://drive.google.com/drive/folders/1wwtARu8W1fBJWhLUUw78owmmbDOOhdPY?usp=sharing
 - Videos with gameplay mechanics: https://www.youtube.com/playlist?list=PLiJKc2Gbr2wOYhR1yF6F6YSo-RV3zbNrt
@@ -54,5 +56,3 @@ There are 2 main maps:
 ### FMOD plugin
 - idk, fmod guys %)
 All assets are provided only for demonstration purposes
-
-P.S. There seems to be a problem with billing my account due to sanctions on russian banks so the repository might be unclonable for some time
