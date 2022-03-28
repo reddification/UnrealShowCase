@@ -54,3 +54,5 @@ There are 2 main maps:
 ### FMOD plugin
 - idk, fmod guys %)
 All assets are provided only for demonstration purposes
+
+P.S. There seems to be a problem with billing my account due to sanctions on russian banks so the repository might be unclonable for some time
