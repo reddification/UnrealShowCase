@@ -14,6 +14,7 @@
 #include "Components/Character/SoakingComponent.h"
 #include "Components/Combat/CharacterCombatComponent.h"
 #include "Data/DataAssets/Characters/PlayerCharacterDataAsset.h"
+#include "Net/UnrealNetwork.h"
 #include "Subsystems/NpcSubsystem.h"
 
 APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -109,6 +110,12 @@ APlayerCharacter::APlayerCharacter(const FObjectInitializer& ObjectInitializer) 
     // PlayerInputComponent->BindAction("EquipSecondaryThrowable", IE_Pressed, CharacterEquipmentComponent, &UCharacterEquipmentComponent::EquipSecondaryThrowable);
 // }
 #pragma endregion HIDE
+
+void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(APlayerCharacter, PlayerCharacterSettings);
+}
 
 void APlayerCharacter::BeginPlay()
 {

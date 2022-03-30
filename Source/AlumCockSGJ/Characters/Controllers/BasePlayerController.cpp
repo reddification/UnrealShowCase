@@ -56,7 +56,7 @@ void ABasePlayerController::SetPawn(APawn* InPawn)
 void ABasePlayerController::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    if(IsValid(PlayerCharacter) && !PlayerCharacter->bIsCrouched)
+    if(IsValid(PlayerCharacter) && !PlayerCharacter->bIsCrouched && PlayerHUDWidget)
         PlayerHUDWidget->OnPlayerSpeedChanged(GetPawn()->GetVelocity().Size());
 }
 

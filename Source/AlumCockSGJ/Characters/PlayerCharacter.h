@@ -25,6 +25,8 @@ public:
     UPlayerVisionComponent* GetCharacterVisionComponent() const { return CharacterVisionComponent; }
     UCameraComponent* GetCameraComponent() const { return CameraComponent; }
     mutable FOnDeath OnDeath;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const override;
 	
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
@@ -101,6 +103,9 @@ private:
     void SetSpringArmPosition(float Alpha) const;
 
     TArray<FTimeline*> ActiveTimelines;
-	TWeakObjectPtr<const class UPlayerCharacterDataAsset> PlayerCharacterSettings;
+
+	UPROPERTY(Replicated)
+	const UPlayerCharacterDataAsset* PlayerCharacterSettings;
+
 	FPlayerNpcInteractionData PlayerNpcInteractionData;
 };
