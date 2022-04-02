@@ -20,7 +20,8 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Utils/TraceUtils.h"
+
+#define REP_SPRINTING FSavedMove_Character::FLAG_Custom_0
 
 void UHumanoidCharacterMovementComponent::BeginPlay()
 {
@@ -33,6 +34,20 @@ void UHumanoidCharacterMovementComponent::BeginPlay()
 		CharacterOwner->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UHumanoidCharacterMovementComponent::OnPlayerCapsuleHit);
 	
 	InitPostureHalfHeights();
+}
+
+void UHumanoidCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (GetOwnerRole() == ROLE_Authority && CharacterOwner->GetName().Equals("BP_DemoPlayerCharacter_C_1"))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Server: Speed = %.2f, acceleration = %.2f, max acceleration = %.2f"), Velocity.Size(), Acceleration.Size(), MaxAcceleration);
+	}
+	else if (GetOwnerRole() == ROLE_AutonomousProxy)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Client: Speed = %.2f, acceleration = %.2f, max acceleration = %.2f"), Velocity.Size(), Acceleration.Size(), MaxAcceleration);
+	}
 }
 
 float UHumanoidCharacterMovementComponent::GetMaxSpeed() const
@@ -127,6 +142,23 @@ void UHumanoidCharacterMovementComponent::UpdateCharacterStateBeforeMovement(flo
 			UnProne();
 		}
 	}
+}
+
+void UHumanoidCharacterMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
+{
+	Super::UpdateFromCompressedFlags(Flags);
+	bSprinting = Flags & REP_SPRINTING;
+}
+
+FNetworkPredictionData_Client* UHumanoidCharacterMovementComponent::GetPredictionData_Client() const
+{
+	if (ClientPredictionData == nullptr)
+	{
+		auto MutableCMC = const_cast<UHumanoidCharacterMovementComponent*>(this);
+		MutableCMC->ClientPredictionData = new FNetworkPredictionData_Client_HumanoidCharacter(*this);
+	}
+	
+	return ClientPredictionData;
 }
 
 void UHumanoidCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
@@ -1180,6 +1212,52 @@ bool UHumanoidCharacterMovementComponent::IgnorePhysicsRotation()
 }
 
 #pragma region UTILS
+
+void FHumanoidCharacterSavedMove::Clear()
+{
+	FBaseSavedMove::Clear();
+	bSavedSprinting = 0;
+}
+
+uint8 FHumanoidCharacterSavedMove::GetCompressedFlags() const
+{
+	uint8 Result = FBaseSavedMove::GetCompressedFlags();
+	if (bSavedSprinting)
+		Result |= FLAG_Custom_0;
+	
+	return Result;
+}
+
+bool FHumanoidCharacterSavedMove::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter,
+	float MaxDelta) const
+{
+	const FHumanoidCharacterSavedMove* NewMove = StaticCast<const FHumanoidCharacterSavedMove*>(NewMovePtr.Get());
+	if (bSavedSprinting != NewMove->bSavedSprinting)
+		return false;
+	
+	return FBaseSavedMove::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
+}
+
+void FHumanoidCharacterSavedMove::SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel,
+	FNetworkPredictionData_Client_Character& ClientData)
+{
+	FBaseSavedMove::SetMoveFor(Character, InDeltaTime, NewAccel, ClientData);
+	UHumanoidCharacterMovementComponent* CMC = StaticCast<UHumanoidCharacterMovementComponent*>(Character->GetMovementComponent());
+	bSavedSprinting = CMC->bSprinting;
+}
+
+void FHumanoidCharacterSavedMove::PrepMoveFor(ACharacter* Character)
+{
+	FBaseSavedMove::PrepMoveFor(Character);
+	UHumanoidCharacterMovementComponent* CMC = StaticCast<UHumanoidCharacterMovementComponent*>(Character->GetMovementComponent());
+	CMC->bSprinting = bSavedSprinting;
+}
+
+FSavedMovePtr FNetworkPredictionData_Client_HumanoidCharacter::AllocateNewMove()
+{
+	return FSavedMovePtr(new FHumanoidCharacterSavedMove());
+	// return FNetworkPredictionData_Client_Character::AllocateNewMove();
+}
 
 void UHumanoidCharacterMovementComponent::InitPostureHalfHeights()
 {

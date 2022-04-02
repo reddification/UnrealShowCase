@@ -2,6 +2,32 @@
 
 #include "GameFramework/Character.h"
 
+void FBaseSavedMove::Clear()
+{
+	FSavedMove_Character::Clear();
+}
+
+uint8 FBaseSavedMove::GetCompressedFlags() const
+{
+	return FSavedMove_Character::GetCompressedFlags();
+}
+
+bool FBaseSavedMove::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter, float MaxDelta) const
+{
+	return FSavedMove_Character::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
+}
+
+void FBaseSavedMove::SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel,
+	FNetworkPredictionData_Client_Character& ClientData)
+{
+	FSavedMove_Character::SetMoveFor(Character, InDeltaTime, NewAccel, ClientData);
+}
+
+void FBaseSavedMove::PrepMoveFor(ACharacter* Character)
+{
+	FSavedMove_Character::PrepMoveFor(Character);
+}
+
 void UBaseCharacterMovementComponent::SetForcedWalkSpeed(float ForcedWalkSpeed)
 {
 	if (bForcedSpeed && ForcedWalkSpeed < 0.f)
@@ -27,7 +53,7 @@ void UBaseCharacterMovementComponent::SetDesiredRotation(const FRotator& Rotator
 	ForceTargetRotation = Rotator;
 }
 
-bool UBaseCharacterMovementComponent::CanApplyCustomRotation()
+bool UBaseCharacterMovementComponent::CanApplyCustomRotation() const
 {
 	return !CharacterOwner->bUseControllerRotationYaw;
 }

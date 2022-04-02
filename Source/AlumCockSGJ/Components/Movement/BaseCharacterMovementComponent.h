@@ -4,6 +4,17 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BaseCharacterMovementComponent.generated.h"
 
+class FBaseSavedMove : public FSavedMove_Character
+{
+
+public:
+	virtual void Clear() override;
+	virtual uint8 GetCompressedFlags() const override;
+	virtual bool CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter, float MaxDelta) const override;
+	virtual void SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel, FNetworkPredictionData_Client_Character& ClientData) override;
+	virtual void PrepMoveFor(ACharacter* Character) override;
+};
+
 DECLARE_MULTICAST_DELEGATE(FDesiredRotationReachedEvent)
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -22,7 +33,7 @@ public:
 
 protected:
 	virtual bool IgnorePhysicsRotation() { return false; }
-	bool CanApplyCustomRotation();
+	bool CanApplyCustomRotation() const;
 
 	bool bForceRotation = false;
 	FRotator ForceTargetRotation = FRotator::ZeroRotator;

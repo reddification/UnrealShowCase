@@ -26,11 +26,38 @@ DECLARE_DELEGATE_TwoParams(FSlidingStateChangedEvent, bool bSliding, float HalfH
 
 class ALadder;
 
+class FHumanoidCharacterSavedMove : public FBaseSavedMove
+{
+public:
+	virtual void Clear() override;
+	virtual uint8 GetCompressedFlags() const override;
+	virtual bool CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter, float MaxDelta) const override;
+	virtual void SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel, FNetworkPredictionData_Client_Character& ClientData) override;
+	virtual void PrepMoveFor(ACharacter* Character) override;
+	
+private:
+	uint8 bSavedSprinting:1;
+};
+
+class FNetworkPredictionData_Client_HumanoidCharacter : public FNetworkPredictionData_Client_Character
+{
+	typedef FNetworkPredictionData_Client_Character Super;
+public:
+	FNetworkPredictionData_Client_HumanoidCharacter(const UCharacterMovementComponent& CMC)
+		: Super(CMC)
+	{
+	}
+
+	virtual FSavedMovePtr AllocateNewMove() override;
+};
+
 UCLASS()
 class ALUMCOCKSGJ_API UHumanoidCharacterMovementComponent : public UBaseCharacterMovementComponent
 {
 	GENERATED_BODY()
 
+friend FHumanoidCharacterSavedMove;
+	
 public:
 	void InitPostureHalfHeights();
 	virtual void BeginPlay() override;
@@ -116,6 +143,15 @@ public:
 #pragma endregion 
 
 	const EPosture& GetCurrentPosture() const { return CurrentPosture; }
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+#pragma region REPLICATION
+	
+	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
+	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
+
+#pragma endregion REPLICATION
+	
 	
 protected:
 	virtual void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
