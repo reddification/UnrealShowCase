@@ -19,7 +19,7 @@ void ULedgeDetectionComponent::BeginPlay()
 bool ULedgeDetectionComponent::DetectLedge(FLedgeDescriptor& LedgeDescriptor)
 {
 	const UCapsuleComponent* CharacterCapsule = CharacterOwner->GetClass()->GetDefaultObject<ACharacter>()->GetCapsuleComponent();
-	const float BottomZOffset = 2.f;
+	const float BottomZOffset = 5.f;
 	const FVector CharacterBottom = CharacterOwner->GetActorLocation()
 		- (CharacterOwner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - BottomZOffset) * FVector::UpVector;
 	
@@ -60,10 +60,15 @@ bool ULedgeDetectionComponent::DetectLedge(FLedgeDescriptor& LedgeDescriptor)
     		LedgeApproachTraceEnd, TraceType,true,TArray<AActor*>(),
     		EDrawDebugTrace::None, LedgeApproachHitResult, true);
 
-	if (bCantApproachLedge)
+	if (bDebugEnabled && GetOwnerRole() == ROLE_SimulatedProxy)
 	{
-		return false;
+		DrawDebugBox(GetWorld(), LedgeApproachTraceStart, FVector(10, 10, 10), FColor::Blue, false, 15);
+		DrawDebugBox(GetWorld(), LedgeApproachHitResult.Location, FVector(10, 10, 10), FColor::Red, false, 15);
+		DrawDebugBox(GetWorld(), LedgeApproachTraceEnd, FVector(10, 10, 10), FColor::Blue, false, 15);
 	}
+
+	if (bCantApproachLedge)
+		return false;
 	
 	FHitResult DownwardCheckHitResult;
 	const float DownwardSweepSphereRadius = ForwardCheckCapsuleRadius;
@@ -77,9 +82,7 @@ bool ULedgeDetectionComponent::DetectLedge(FLedgeDescriptor& LedgeDescriptor)
 		CollisionQueryParams, TraceParams);
 	
 	if (!bDownwardHit)
-	{
 		return false;
-	}
 
 	const float OverlapCapsuleRadius = CharacterCapsule->GetScaledCapsuleRadius();
 	const float OverlapCapsuleHalfHeight = CharacterCapsule->GetScaledCapsuleHalfHeight();
@@ -90,9 +93,7 @@ bool ULedgeDetectionComponent::DetectLedge(FLedgeDescriptor& LedgeDescriptor)
 		OverlapCapsuleHalfHeight, ProfilePawn, CollisionQueryParams, TraceParams);
 
 	if (bOverlap)
-	{
 		return false;
-	}
 	
 	LedgeDescriptor.Location = OverlapLocation;
 	LedgeDescriptor.Rotation = (ForwardCheckHitResult.Normal * FVector(-1.f, -1.f, 0)).ToOrientationRotator();

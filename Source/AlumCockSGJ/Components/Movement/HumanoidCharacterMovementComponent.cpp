@@ -20,8 +20,10 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 #define REP_SPRINTING FSavedMove_Character::FLAG_Custom_0
+#define REP_MANTLING FSavedMove_Character::FLAG_Custom_1
 
 void UHumanoidCharacterMovementComponent::BeginPlay()
 {
@@ -29,7 +31,7 @@ void UHumanoidCharacterMovementComponent::BeginPlay()
 	checkf(IsValid(MovementSettings), TEXT("Movement Settings Data Asset must be set"));
 	DefaultWalkSpeed = MaxWalkSpeed;
 	CurrentAimSpeed = MovementSettings->DefaultAimingSpeed;
-	GCCharacter = Cast<ABaseHumanoidCharacter>(CharacterOwner);
+	HumanoidCharacter = Cast<ABaseHumanoidCharacter>(CharacterOwner);
 	if (IsValid(WallrunSettings))
 		CharacterOwner->GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &UHumanoidCharacterMovementComponent::OnPlayerCapsuleHit);
 	
@@ -37,17 +39,17 @@ void UHumanoidCharacterMovementComponent::BeginPlay()
 }
 
 void UHumanoidCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+                                                        FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (GetOwnerRole() == ROLE_Authority && CharacterOwner->GetName().Equals("BP_DemoPlayerCharacter_C_1"))
-	{
-		UE_LOG(LogTemp, Log, TEXT("Server: Speed = %.2f, acceleration = %.2f, max acceleration = %.2f"), Velocity.Size(), Acceleration.Size(), MaxAcceleration);
-	}
-	else if (GetOwnerRole() == ROLE_AutonomousProxy)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Client: Speed = %.2f, acceleration = %.2f, max acceleration = %.2f"), Velocity.Size(), Acceleration.Size(), MaxAcceleration);
-	}
+	// if (GetOwnerRole() == ROLE_Authority && CharacterOwner->GetName().Equals("BP_DemoPlayerCharacter_C_1"))
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("Server: Speed = %.2f, acceleration = %.2f, max acceleration = %.2f"), Velocity.Size(), Acceleration.Size(), MaxAcceleration);
+	// }
+	// else if (GetOwnerRole() == ROLE_AutonomousProxy)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("Client: Speed = %.2f, acceleration = %.2f, max acceleration = %.2f"), Velocity.Size(), Acceleration.Size(), MaxAcceleration);
+	// }
 }
 
 float UHumanoidCharacterMovementComponent::GetMaxSpeed() const
@@ -67,14 +69,14 @@ float UHumanoidCharacterMovementComponent::GetMaxSpeed() const
 		RawSpeed =  SlideSettings->MaxSpeed;
 	else if (bAiming)
 		RawSpeed =  CurrentAimSpeed;
-	else if (GCCharacter->GetCarryingComponent()->IsCarrying())
-		RawSpeed =  GCCharacter->GetCarryingComponent()->GetSettings()->CarryingMovementSpeed;
+	else if (HumanoidCharacter->GetCarryingComponent()->IsCarrying())
+		RawSpeed =  HumanoidCharacter->GetCarryingComponent()->GetSettings()->CarryingMovementSpeed;
 	else if (bWalking)
 		RawSpeed = MovementSettings->WalkingSpeed;
 	else 
 		RawSpeed = Super::GetMaxSpeed();
 	
-	float Soakness = GCCharacter->GetSoakingComponent()->GetSoakness();
+	float Soakness = HumanoidCharacter->GetSoakingComponent()->GetSoakness();
 	return FMath::Max(50.f, RawSpeed * (1.f - Soakness));
 }
 
@@ -101,13 +103,19 @@ bool UHumanoidCharacterMovementComponent::TryStartSprint()
 	}
 	
 	bSprinting = true;
-	GCCharacter->OnActionStarted(ECharacterAction::Sprint);
+	if (HumanoidCharacter->IsLocallyControlled())
+		HumanoidCharacter->bSprintingRep = 1;
+	
+	HumanoidCharacter->OnActionStarted(ECharacterAction::Sprint);
 	return true;
 }
 
 void UHumanoidCharacterMovementComponent::StopSprint()
 {
-	GCCharacter->OnActionEnded(ECharacterAction::Sprint);
+	HumanoidCharacter->OnActionEnded(ECharacterAction::Sprint);
+	if (HumanoidCharacter->IsLocallyControlled())
+		HumanoidCharacter->bSprintingRep = 0;
+	
 	bSprinting = false;
 }
 
@@ -144,10 +152,85 @@ void UHumanoidCharacterMovementComponent::UpdateCharacterStateBeforeMovement(flo
 	}
 }
 
+#pragma region REPLICATION
+
+// void UHumanoidCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+// {
+// 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+// 	FDoRepLifetimeParams RepParams;
+// 	// RepParams.Condition = ELifetimeCondition::COND_SimulatedOnly;
+// 	// DOREPLIFETIME_WITH_PARAMS(UHumanoidCharacterMovementComponent, bSprinting, RepParams)
+// 	// DOREPLIFETIME_WITH_PARAMS(UHumanoidCharacterMovementComponent, CurrentPosture, RepParams)
+// 	DOREPLIFETIME(UHumanoidCharacterMovementComponent, bSprinting)
+// 	DOREPLIFETIME(UHumanoidCharacterMovementComponent, CurrentPosture)
+// }
+
+void FHumanoidCharacterSavedMove::Clear()
+{
+	FBaseSavedMove::Clear();
+	bSavedSprinting = 0;
+	bSavedMantling = 0;
+}
+
+uint8 FHumanoidCharacterSavedMove::GetCompressedFlags() const
+{
+	uint8 Result = FBaseSavedMove::GetCompressedFlags();
+	if (bSavedSprinting)
+		Result |= REP_SPRINTING;
+	if (bSavedMantling)
+	{
+		Result &= ~FLAG_JumpPressed;
+		Result |= REP_MANTLING;
+	}
+	
+	return Result;
+}
+
+bool FHumanoidCharacterSavedMove::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter,
+	float MaxDelta) const
+{
+	const FHumanoidCharacterSavedMove* NewMove = StaticCast<const FHumanoidCharacterSavedMove*>(NewMovePtr.Get());
+	if (bSavedSprinting != NewMove->bSavedSprinting || bSavedMantling != NewMove->bSavedMantling)
+		return false;
+	
+	return FBaseSavedMove::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
+}
+
+void FHumanoidCharacterSavedMove::SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel,
+	FNetworkPredictionData_Client_Character& ClientData)
+{
+	FBaseSavedMove::SetMoveFor(Character, InDeltaTime, NewAccel, ClientData);
+	UHumanoidCharacterMovementComponent* CMC = StaticCast<UHumanoidCharacterMovementComponent*>(Character->GetMovementComponent());
+	bSavedSprinting = CMC->bSprinting;
+	bSavedMantling = CMC->HumanoidCharacter->IsMantling();
+}
+
+void FHumanoidCharacterSavedMove::PrepMoveFor(ACharacter* Character)
+{
+	FBaseSavedMove::PrepMoveFor(Character);
+	UHumanoidCharacterMovementComponent* CMC = StaticCast<UHumanoidCharacterMovementComponent*>(Character->GetMovementComponent());
+	CMC->bSprinting = bSavedSprinting;
+	CMC->SetHumanoidCharacterSprintingState(bSavedSprinting);
+}
+
+FSavedMovePtr FNetworkPredictionData_Client_HumanoidCharacter::AllocateNewMove()
+{
+	return FSavedMovePtr(new FHumanoidCharacterSavedMove());
+	// return FNetworkPredictionData_Client_Character::AllocateNewMove();
+}
+
 void UHumanoidCharacterMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
 	bSprinting = Flags & REP_SPRINTING;
+	HumanoidCharacter->bSprintingRep = bSprinting;
+	bool bWasMantling = HumanoidCharacter->IsMantling();
+	bool bIsMantling = Flags & REP_MANTLING;
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		if (!bWasMantling && bIsMantling)
+			HumanoidCharacter->Mantle(true);
+	}
 }
 
 FNetworkPredictionData_Client* UHumanoidCharacterMovementComponent::GetPredictionData_Client() const
@@ -160,6 +243,8 @@ FNetworkPredictionData_Client* UHumanoidCharacterMovementComponent::GetPredictio
 	
 	return ClientPredictionData;
 }
+
+#pragma endregion REPLICATION
 
 void UHumanoidCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
@@ -187,7 +272,7 @@ void UHumanoidCharacterMovementComponent::OnMovementModeChanged(EMovementMode Pr
 		}
 
 		bNotifyApex = true;
-		GCCharacter->OnActionStarted(ECharacterAction::Swim);
+		HumanoidCharacter->OnActionStarted(ECharacterAction::Swim);
 		CharacterOwner->GetCapsuleComponent()->SetCapsuleSize(MovementSettings->SwimmingCapsuleRadius, MovementSettings->SwimmingCapsuleHalfHeight);
 	}
 	else if (PreviousMovementMode == MOVE_Swimming)
@@ -199,7 +284,7 @@ void UHumanoidCharacterMovementComponent::OnMovementModeChanged(EMovementMode Pr
 		FRotator Rotation = CharacterOwner->GetActorRotation();
 		Rotation.Roll = 0;
 		CharacterOwner->SetActorRotation(Rotation);
-		GCCharacter->OnActionEnded(ECharacterAction::Swim);
+		HumanoidCharacter->OnActionEnded(ECharacterAction::Swim);
 	}
 	else if (PreviousMovementMode == MOVE_Custom)
 	{
@@ -208,7 +293,7 @@ void UHumanoidCharacterMovementComponent::OnMovementModeChanged(EMovementMode Pr
 		case EGCMovementMode::CMOVE_Climbing:
 			StoppedClimbing.ExecuteIfBound(CurrentClimbable);
 			CurrentClimbable = nullptr;
-			GCCharacter->OnActionEnded(ECharacterAction::Climb);
+			HumanoidCharacter->OnActionEnded(ECharacterAction::Climb);
 			break;
 		default:
 			break;
@@ -232,7 +317,7 @@ void UHumanoidCharacterMovementComponent::RequestCrouch()
 
 void UHumanoidCharacterMovementComponent::Crouch(bool bClientSimulation)
 {
-	if (!bClientSimulation && !CanCrouchInCurrentState() || !IsMovingOnGround() || IsSprinting() || !GCCharacter->CanStartAction(ECharacterAction::Crouch))
+	if (!bClientSimulation && !CanCrouchInCurrentState() || !IsMovingOnGround() || IsSprinting() || !HumanoidCharacter->CanStartAction(ECharacterAction::Crouch))
 	{
 		return;
 	}
@@ -245,7 +330,7 @@ void UHumanoidCharacterMovementComponent::Crouch(bool bClientSimulation)
 		// IDK if I can get rid of this since i'm using postures now
 		CharacterOwner->bIsCrouched = true;
 		CrouchedOrProned.ExecuteIfBound(ScaledHalfHeightAdjust);
-		GCCharacter->OnActionStarted(ECharacterAction::Crouch);
+		HumanoidCharacter->OnActionStarted(ECharacterAction::Crouch);
 	}
 	else
 	{
@@ -258,7 +343,7 @@ void UHumanoidCharacterMovementComponent::UnCrouch(bool bClientSimulation)
 	bool bWokeUp = TryWakeUpToState(EPosture::Standing);
 	if (bWokeUp)
 	{
-		GCCharacter->OnActionEnded(ECharacterAction::Crouch);
+		HumanoidCharacter->OnActionEnded(ECharacterAction::Crouch);
 	}
 }
 
@@ -270,13 +355,18 @@ void UHumanoidCharacterMovementComponent::ResetAimingSpeed()
 	}
 }
 
+void UHumanoidCharacterMovementComponent::SetHumanoidCharacterSprintingState(uint8 NewValue)
+{
+	HumanoidCharacter->bSprintingRep = NewValue;
+}
+
 #pragma endregion CROUCH
 
 #pragma region PRONE
 
 void UHumanoidCharacterMovementComponent::Prone()
 {
-	if (!CanProne() || !GCCharacter->CanStartAction(ECharacterAction::Crawl))
+	if (!CanProne() || !HumanoidCharacter->CanStartAction(ECharacterAction::Crawl))
 	{
 		bWantsToProne = false;
 		return;
@@ -288,7 +378,7 @@ void UHumanoidCharacterMovementComponent::Prone()
 		CurrentPosture = EPosture::Proning;
 		CharacterOwner->bIsCrouched = false;
 		CrouchedOrProned.ExecuteIfBound(ScaledHalfHeightAdjust);
-		GCCharacter->OnActionStarted(ECharacterAction::Crawl);
+		HumanoidCharacter->OnActionStarted(ECharacterAction::Crawl);
 	}
 	else
 	{
@@ -301,7 +391,7 @@ void UHumanoidCharacterMovementComponent::UnProne()
 	bool bWokeUp = TryWakeUpToState(EPosture::Standing);
 	if (bWokeUp)
 	{
-		GCCharacter->OnActionEnded(ECharacterAction::Crawl);
+		HumanoidCharacter->OnActionEnded(ECharacterAction::Crawl);
 	}
 }
 
@@ -501,7 +591,7 @@ void UHumanoidCharacterMovementComponent::RequestProne()
 
 bool UHumanoidCharacterMovementComponent::TryStartMantle(const FMantlingMovementParameters& NewMantlingParameters)
 {
-	if (IsInCustomMovementMode(EGCMovementMode::CMOVE_Mantling) || !GCCharacter->CanStartAction(ECharacterAction::Mantle))
+	if (IsInCustomMovementMode(EGCMovementMode::CMOVE_Mantling) || !HumanoidCharacter->CanStartAction(ECharacterAction::Mantle))
 		return false;
 	
 	this->MantlingParameters = NewMantlingParameters;
@@ -510,7 +600,8 @@ bool UHumanoidCharacterMovementComponent::TryStartMantle(const FMantlingMovement
 	CharacterOwner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	GetWorld()->GetTimerManager().SetTimer(MantlingTimerHandle, this,
     	&UHumanoidCharacterMovementComponent::EndMantle, MantlingParameters.Duration);
-	GCCharacter->OnActionStarted(ECharacterAction::Mantle);
+	HumanoidCharacter->OnActionStarted(ECharacterAction::Mantle);
+	HumanoidCharacter->bMantlingRep = 1;
 	return true;
 }
 
@@ -518,7 +609,8 @@ void UHumanoidCharacterMovementComponent::EndMantle()
 {
 	SetMovementMode(MOVE_Walking);
 	CharacterOwner->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	GCCharacter->OnActionEnded(ECharacterAction::Mantle);
+	HumanoidCharacter->OnActionEnded(ECharacterAction::Mantle);
+	HumanoidCharacter->bMantlingRep = 0;
 }
 
 bool UHumanoidCharacterMovementComponent::IsMantling() const
@@ -529,6 +621,9 @@ bool UHumanoidCharacterMovementComponent::IsMantling() const
 
 void UHumanoidCharacterMovementComponent::PhysCustomMantling(float DeltaTime, int32 Iterations)
 {
+	if (GetOwnerRole() == ROLE_SimulatedProxy)
+		return;
+	
 	float ElapsedTime = GetWorld()->GetTimerManager().GetTimerElapsed(MantlingTimerHandle) + MantlingParameters.StartTime;
 	FVector CurveValue = MantlingParameters.MantlingCurve->GetVectorValue(ElapsedTime);
 	float PositionAlpha = CurveValue.X;
@@ -541,8 +636,10 @@ void UHumanoidCharacterMovementComponent::PhysCustomMantling(float DeltaTime, in
 		: FVector::ZeroVector;
 	FVector NextLocation = FMath::Lerp(CorrectedInitialLocation, MantlingParameters.TargetLocation + MantleTagetDeltaLocation, PositionAlpha);
 	FRotator NextRotation = FMath::Lerp(MantlingParameters.InitialRotation, MantlingParameters.TargetRotation, PositionAlpha);
+	FVector Delta = NextLocation - GetActorLocation();
+	Velocity = Delta * DeltaTime;
 	FHitResult Hit;
-	SafeMoveUpdatedComponent(NextLocation - GetActorLocation(), NextRotation, false, Hit);
+	SafeMoveUpdatedComponent(Delta, NextRotation, false, Hit);
 }
 
 #pragma endregion MANTLING
@@ -559,7 +656,7 @@ float UHumanoidCharacterMovementComponent::GetActorToClimbableProjection(const A
 
 bool UHumanoidCharacterMovementComponent::TryStartClimbing(const ALadder* Ladder)
 {
-	if (!IsValid(ClimbingSettings) || IsClimbing() || !GCCharacter->CanStartAction(ECharacterAction::Climb))
+	if (!IsValid(ClimbingSettings) || IsClimbing() || !HumanoidCharacter->CanStartAction(ECharacterAction::Climb))
 		return false;
 
 	CurrentClimbable = Ladder;
@@ -584,7 +681,7 @@ bool UHumanoidCharacterMovementComponent::TryStartClimbing(const ALadder* Ladder
 		.RotateAngleAxis(180, Ladder->GetActorUpVector()).ToOrientationRotator();
 	CharacterOwner->SetActorRotation(TargetOrientationRotation);
 	SetMovementMode(MOVE_Custom, (uint8)EGCMovementMode::CMOVE_Climbing);
-	GCCharacter->OnActionStarted(ECharacterAction::Climb);
+	HumanoidCharacter->OnActionStarted(ECharacterAction::Climb);
 	return true;
 }
 
@@ -603,10 +700,10 @@ void UHumanoidCharacterMovementComponent::StopClimbing(EStopClimbingMethod StopC
 				FVector JumpDirection = FVector::ZeroVector;
 				float RightInput = 0;
 				float UpInput = 0;
-				if (GCCharacter.IsValid())
+				if (HumanoidCharacter.IsValid())
 				{
-					RightInput = GCCharacter->GetCurrentInputRight();
-					UpInput = GCCharacter->GetCurrentInputForward();
+					RightInput = HumanoidCharacter->GetCurrentInputRight();
+					UpInput = HumanoidCharacter->GetCurrentInputForward();
 				}
 				
 				if (UpInput >= 0)
@@ -646,7 +743,7 @@ void UHumanoidCharacterMovementComponent::StopClimbing(EStopClimbingMethod StopC
 			break;
 	}
 
-	GCCharacter->OnActionEnded(ECharacterAction::Climb);
+	HumanoidCharacter->OnActionEnded(ECharacterAction::Climb);
 }
 
 bool UHumanoidCharacterMovementComponent::IsClimbing() const
@@ -697,7 +794,7 @@ void UHumanoidCharacterMovementComponent::PhysCustomClimbing(float DeltaTime, in
 
 bool UHumanoidCharacterMovementComponent::TryStartZiplining(const FZiplineParams& NewZiplineParams)
 {
-	if (!IsValid(ZiplineSettings) || IsZiplining() || !GCCharacter->CanStartAction(ECharacterAction::Zipline))
+	if (!IsValid(ZiplineSettings) || IsZiplining() || !HumanoidCharacter->CanStartAction(ECharacterAction::Zipline))
 	{
 		return false;		
 	}
@@ -708,14 +805,14 @@ bool UHumanoidCharacterMovementComponent::TryStartZiplining(const FZiplineParams
 	// ForceTargetRotation = ;
 	ZiplineParams.bCorrected = false;
 	SetMovementMode(MOVE_Custom, (uint8)EGCMovementMode::CMOVE_Zipline);
-	GCCharacter->OnActionStarted(ECharacterAction::Zipline);
+	HumanoidCharacter->OnActionStarted(ECharacterAction::Zipline);
 	return true;
 }
 
 void UHumanoidCharacterMovementComponent::StopZiplining()
 {
 	SetMovementMode(MOVE_Falling);
-	GCCharacter->OnActionEnded(ECharacterAction::Zipline);
+	HumanoidCharacter->OnActionEnded(ECharacterAction::Zipline);
 }
 
 bool UHumanoidCharacterMovementComponent::IsZiplining() const
@@ -788,7 +885,7 @@ void UHumanoidCharacterMovementComponent::OnPlayerCapsuleHit(UPrimitiveComponent
 		return;
 	}
 	
-	if (!WallrunData.bWantsToWallrun || IsWallrunning() || bOutOfStamina || !GCCharacter->CanStartAction(ECharacterAction::Wallrun))
+	if (!WallrunData.bWantsToWallrun || IsWallrunning() || bOutOfStamina || !HumanoidCharacter->CanStartAction(ECharacterAction::Wallrun))
 	{
 		return;
 	}
@@ -819,7 +916,7 @@ void UHumanoidCharacterMovementComponent::OnPlayerCapsuleHit(UPrimitiveComponent
 		: WallrunSettings->WallrunHeightDynamicsFromAirCurve;
 	
 	SetMovementMode(MOVE_Custom, (uint8)EGCMovementMode::CMOVE_WallRun);
-	GCCharacter->OnActionStarted(ECharacterAction::Wallrun);
+	HumanoidCharacter->OnActionStarted(ECharacterAction::Wallrun);
 }
 
 ESide UHumanoidCharacterMovementComponent::GetWallrunSideFromNormal(const FVector& Normal) const
@@ -896,7 +993,7 @@ void UHumanoidCharacterMovementComponent::StopWallrunning(bool bResetTimer)
 	WallrunData.bWantsToWallrun = false;
 	if (!IsWallrunning())
 	{
-		GCCharacter->OnActionEnded(ECharacterAction::Wallrun);
+		HumanoidCharacter->OnActionEnded(ECharacterAction::Wallrun);
 		return;
 	}
 	
@@ -907,7 +1004,7 @@ void UHumanoidCharacterMovementComponent::StopWallrunning(bool bResetTimer)
 	
 	WallrunEndEvent.Broadcast(WallrunData.Side);
 	SetMovementMode(GetMovementMode());
-	GCCharacter->OnActionEnded(ECharacterAction::Wallrun);
+	HumanoidCharacter->OnActionEnded(ECharacterAction::Wallrun);
 }
 
 bool UHumanoidCharacterMovementComponent::IsWallrunning() const
@@ -1032,7 +1129,7 @@ bool UHumanoidCharacterMovementComponent::IsSliding() const
 
 bool UHumanoidCharacterMovementComponent::TryStartSliding()
 {
-	if (IsSliding() || !SlideData.bCanSlide || !GCCharacter->CanStartAction(ECharacterAction::Slide))
+	if (IsSliding() || !SlideData.bCanSlide || !HumanoidCharacter->CanStartAction(ECharacterAction::Slide))
 	{
 		return false;
 	}
@@ -1048,7 +1145,7 @@ bool UHumanoidCharacterMovementComponent::TryStartSliding()
 	WallrunData.bWantsToWallrun = false;
 	SlideData.Speed = Velocity.Size();
 	SetMovementMode(MOVE_Custom, (uint8)EGCMovementMode::CMOVE_Slide);
-	GCCharacter->OnActionStarted(ECharacterAction::Slide);
+	HumanoidCharacter->OnActionStarted(ECharacterAction::Slide);
 	return true;
 }
 
@@ -1056,13 +1153,13 @@ void UHumanoidCharacterMovementComponent::StopSliding()
 {
 	if (!IsSliding())
 	{
-		GCCharacter->OnActionEnded(ECharacterAction::Slide);
+		HumanoidCharacter->OnActionEnded(ECharacterAction::Slide);
 		return;
 	}
 
 	ResetFromSliding();
 	SetMovementMode(GetMovementMode());
-	GCCharacter->OnActionEnded(ECharacterAction::Slide);
+	HumanoidCharacter->OnActionEnded(ECharacterAction::Slide);
 }
 
 void UHumanoidCharacterMovementComponent::ResetFromSliding()
@@ -1212,52 +1309,6 @@ bool UHumanoidCharacterMovementComponent::IgnorePhysicsRotation()
 }
 
 #pragma region UTILS
-
-void FHumanoidCharacterSavedMove::Clear()
-{
-	FBaseSavedMove::Clear();
-	bSavedSprinting = 0;
-}
-
-uint8 FHumanoidCharacterSavedMove::GetCompressedFlags() const
-{
-	uint8 Result = FBaseSavedMove::GetCompressedFlags();
-	if (bSavedSprinting)
-		Result |= FLAG_Custom_0;
-	
-	return Result;
-}
-
-bool FHumanoidCharacterSavedMove::CanCombineWith(const FSavedMovePtr& NewMovePtr, ACharacter* InCharacter,
-	float MaxDelta) const
-{
-	const FHumanoidCharacterSavedMove* NewMove = StaticCast<const FHumanoidCharacterSavedMove*>(NewMovePtr.Get());
-	if (bSavedSprinting != NewMove->bSavedSprinting)
-		return false;
-	
-	return FBaseSavedMove::CanCombineWith(NewMovePtr, InCharacter, MaxDelta);
-}
-
-void FHumanoidCharacterSavedMove::SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel,
-	FNetworkPredictionData_Client_Character& ClientData)
-{
-	FBaseSavedMove::SetMoveFor(Character, InDeltaTime, NewAccel, ClientData);
-	UHumanoidCharacterMovementComponent* CMC = StaticCast<UHumanoidCharacterMovementComponent*>(Character->GetMovementComponent());
-	bSavedSprinting = CMC->bSprinting;
-}
-
-void FHumanoidCharacterSavedMove::PrepMoveFor(ACharacter* Character)
-{
-	FBaseSavedMove::PrepMoveFor(Character);
-	UHumanoidCharacterMovementComponent* CMC = StaticCast<UHumanoidCharacterMovementComponent*>(Character->GetMovementComponent());
-	CMC->bSprinting = bSavedSprinting;
-}
-
-FSavedMovePtr FNetworkPredictionData_Client_HumanoidCharacter::AllocateNewMove()
-{
-	return FSavedMovePtr(new FHumanoidCharacterSavedMove());
-	// return FNetworkPredictionData_Client_Character::AllocateNewMove();
-}
 
 void UHumanoidCharacterMovementComponent::InitPostureHalfHeights()
 {

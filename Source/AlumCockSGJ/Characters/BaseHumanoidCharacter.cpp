@@ -13,7 +13,6 @@
 #include "Actors/Interactive/Environment/Zipline.h"
 #include "Components/Character/CharacterAttributesComponent.h"
 #include "Components/Character/InventoryComponent.h"
-#include "Components/Character/InverseKinematicsComponent.h"
 #include "Components/Character/LedgeDetectionComponent.h"
 #include "Components/Character/SoakingComponent.h"
 #include "Components/Combat/CharacterCombatComponent.h"
@@ -24,12 +23,15 @@
 #include "Data/Movement/ZiplineParams.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PhysicsVolume.h"
+#include "Net/UnrealNetwork.h"
 
 ABaseHumanoidCharacter::ABaseHumanoidCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UHumanoidCharacterMovementComponent>(ACharacter::CharacterMovementComponentName)
 		.SetDefaultSubobjectClass<UCharacterAttributesComponent>(CharacterAttributesComponentName))
 {
 	HumanoidMovementComponent = StaticCast<UHumanoidCharacterMovementComponent*>(GetCharacterMovement());
+	// HumanoidMovementComponent->SetNetAddressable();
+	// HumanoidMovementComponent->SetIsReplicated(true);
 	HumanoidCharacterAttributesComponent = StaticCast<UCharacterAttributesComponent*>(CharacterAttributesComponent);
 	
 	LedgeDetectionComponent = CreateDefaultSubobject<ULedgeDetectionComponent>(TEXT("LedgeDetection"));
@@ -547,13 +549,16 @@ void ABaseHumanoidCharacter::Mantle(bool bForce)
 			const float DefaultHalfHeight = GetDefaultHalfHeight() * GetActorScale().Z;
 			MantleParams.InitialLocation.Z += DefaultHalfHeight - GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 		}
+
+		if (GetLocalRole() > ROLE_SimulatedProxy)
+		{
+			bool bMantleStarted = HumanoidMovementComponent->TryStartMantle(MantleParams);
+			if (!bMantleStarted)
+				return;
 		
-		bool bMantleStarted = HumanoidMovementComponent->TryStartMantle(MantleParams);
-		if (!bMantleStarted)
-			return;
-		
-		if (bIsCrouched)
-			UnCrouch();
+			if (bIsCrouched)
+				UnCrouch();
+		}
 		
 		PlayMantleMontage(MantleSettings, MantleParams.StartTime);
 	}
@@ -584,6 +589,14 @@ bool ABaseHumanoidCharacter::CanMantle() const
 		&& !HumanoidMovementComponent->IsWallrunning()
 		&& IsValid(HumanoidCharacterSettings->MantleHighSettings.MantleCurve)
 		&& IsValid(HumanoidCharacterSettings->MantleLowSettings.MantleCurve);
+}
+
+void ABaseHumanoidCharacter::OnRep_Mantling(bool bWasMantling)
+{
+	if (GetLocalRole() == ROLE_SimulatedProxy && !bWasMantling && bMantlingRep)
+	{
+		Mantle(true);
+	}
 }
 
 #pragma endregion MANTLE
@@ -779,6 +792,19 @@ void ABaseHumanoidCharacter::OnMovementModeChanged(EMovementMode PrevMovementMod
 }
 
 #pragma endregion MOVEMENT
+
+#pragma region REPLICATION
+
+void ABaseHumanoidCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	FDoRepLifetimeParams RepParamsSimulatedOnly;
+	RepParamsSimulatedOnly.Condition = ELifetimeCondition::COND_SimulatedOnly;
+	DOREPLIFETIME_WITH_PARAMS(ABaseHumanoidCharacter, bSprintingRep, RepParamsSimulatedOnly)
+	DOREPLIFETIME_WITH_PARAMS(ABaseHumanoidCharacter, bMantlingRep, RepParamsSimulatedOnly)
+}
+
+#pragma endregion REPLICATION
 
 void ABaseHumanoidCharacter::ChangeMeshOffset(float HalfHeightAdjust)
 {

@@ -4,7 +4,6 @@
 #include "Data/Movement/IKData.h"
 #include "Characters/BaseHumanoidCharacter.h"
 #include "Components/Character/InverseKinematicsComponent.h"
-#include "Components/Combat/CharacterCombatComponent.h"
 #include "Components/Movement/HumanoidCharacterMovementComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -29,7 +28,8 @@ void UHumanoidCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	auto AttributesComponent = HumanoidCharacter->GetBaseCharacterAttributesComponent();
 	
 	bCrouching = MovementComponent->IsCrouching();
-	bSprinting = MovementComponent->IsSprinting();
+	bSprinting = HumanoidCharacter->IsSprinting();
+	
 	bOutOfStamina = AttributesComponent->IsOutOfStamina();
 	bProning = MovementComponent->IsProning();
 	bSwimming = MovementComponent->IsSwimming();	

@@ -49,6 +49,9 @@ public:
 	class UInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 	UCarryingComponent* GetCarryingComponent() const { return CarryingComponent; }
 	
+	bool IsSprinting() const { return bSprintingRep; }
+	bool IsMantling() const { return bMantlingRep; }
+
 	mutable FAmmoChangedEvent AmmoChangedEvent;
 
 #pragma region INPUT
@@ -88,6 +91,8 @@ public:
 	virtual void StopSoaking() override;
 
 	virtual bool IsConsumingStamina() const override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
@@ -190,4 +195,13 @@ private:
 	void OnAimStateChanged(bool bAiming, ARangeWeaponItem* Weapon);
 
 	TWeakObjectPtr<const UHumanoidCharacterDataAsset> HumanoidCharacterSettings;
+
+	UPROPERTY(Replicated)
+	uint32 bSprintingRep:1;
+
+	UPROPERTY(ReplicatedUsing=OnRep_Mantling)
+	bool bMantlingRep;
+
+	UFUNCTION()
+	void OnRep_Mantling(bool bWasMantling);
 };

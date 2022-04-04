@@ -28,6 +28,7 @@ class ALadder;
 
 class FHumanoidCharacterSavedMove : public FBaseSavedMove
 {
+	
 public:
 	virtual void Clear() override;
 	virtual uint8 GetCompressedFlags() const override;
@@ -37,6 +38,7 @@ public:
 	
 private:
 	uint8 bSavedSprinting:1;
+	uint8 bSavedMantling:1;
 };
 
 class FNetworkPredictionData_Client_HumanoidCharacter : public FNetworkPredictionData_Client_Character
@@ -61,6 +63,7 @@ friend FHumanoidCharacterSavedMove;
 public:
 	void InitPostureHalfHeights();
 	virtual void BeginPlay() override;
+	// virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
 	virtual bool CanAttemptJump() const override { return Super::CanAttemptJump() || IsSliding(); }
 	bool TryStartSprint();
@@ -85,6 +88,7 @@ public:
 	virtual void UnCrouch(bool bClientSimulation = false) override;
 	void SetAimingSpeed(float AimMaxSpeed) {CurrentAimSpeed = AimMaxSpeed; }
 	void ResetAimingSpeed();
+	void SetHumanoidCharacterSprintingState(uint8 NewValue);
 
 	FCrouchedOrProned CrouchedOrProned;
 	FWokeUp WokeUp;
@@ -177,12 +181,15 @@ protected:
 	
 private:
 	/* State that affects capsule half height */
+	UPROPERTY(Replicated)
 	EPosture CurrentPosture = EPosture::Standing;
+	
 	float CurrentForwardInput = 0.f;
 	float DefaultWalkSpeed = 0.f;
 	float CurrentAimSpeed = 0.f;
 	
 	bool bSprinting = false;
+
 	bool bOutOfStamina = false;
 	bool bWantsToProne = false;
 	bool bAiming = false;
@@ -210,7 +217,7 @@ private:
 	void PhysCustomZiplining(float DeltaTime, int32 Iterations);
 	void PhysCustomSliding(float DeltaTime, int32 Iterations);
 	
-	TWeakObjectPtr<class ABaseHumanoidCharacter> GCCharacter;
+	TWeakObjectPtr<class ABaseHumanoidCharacter> HumanoidCharacter;
 
 	FRotator ForceTargetRotation = FRotator::ZeroRotator;
 	bool bForceRotation = false;
