@@ -50,6 +50,7 @@ void ABasePlayerController::SetPawn(APawn* InPawn)
         PlayerCharacter->GetInventoryComponent()->ItemPickedUpEvent.AddUObject(this, &ABasePlayerController::OnItemPickedUp);
         
         PlayerCharacter->InputLockedEvent.AddUObject(this, &ABasePlayerController::SetInputLocked);
+        PlayerCharacter->CharacterDeathEvent.AddUObject(this, &ABasePlayerController::OnCharacterDied);
     }
 }
 
@@ -63,19 +64,13 @@ void ABasePlayerController::Tick(float DeltaSeconds)
 void ABasePlayerController::BeginPlay()
 {
     Super::BeginPlay();
-    auto HUD = Cast<AMLGameHUD>(GetHUD());
-    if (HUD)
-        PlayerHUDWidget = HUD->GetPlayerHUD();
-
-    if (GetWorld())
+    GameHUD = Cast<AMLGameHUD>(GetHUD());
+    if (GameHUD)
     {
-        const auto GameMode = Cast<AMLGameModeBase>(GetWorld()->GetAuthGameMode());
-        if (GameMode)
-        {
-            GameMode->OnGameStateChanged.AddUObject(this, &ABasePlayerController::OnGameStateChanged);
-        }
+        PlayerHUDWidget = GameHUD->GetPlayerHUD();
+        GameHUD->ChangeMouseCursorEvent.BindUObject(this, &ABasePlayerController::OnChangeMouseCursorState);
     }
-
+    
     UQuestSubsystem* QuestSubsystem = GetGameInstance()->GetSubsystem<UQuestSubsystem>();
     QuestSubsystem->QuestStartedEvent.AddUObject(this, &ABasePlayerController::OnQuestStarted);
     QuestSubsystem->QuestTaskCompletedEvent.AddUObject(this, &ABasePlayerController::OnQuestEventOccured);
@@ -154,7 +149,7 @@ void ABasePlayerController::SetupInputComponent()
     InputComponent->BindAction("NextPage", EInputEvent::IE_Pressed, this, &ABasePlayerController::ShowNextPage);
     InputComponent->BindAction("PreviousPage", EInputEvent::IE_Pressed, this, &ABasePlayerController::ShowPreviousPage);
     InputComponent->BindAction("CloseReadable", EInputEvent::IE_Pressed, this, &ABasePlayerController::CloseReadable);
-    InputComponent->BindAction("JournalOpen", EInputEvent::IE_Pressed, this, &ABasePlayerController::OnJournalOpen);
+    InputComponent->BindAction("JournalOpen", EInputEvent::IE_Pressed, this, &ABasePlayerController::OpenJournal);
     
     InputComponent->BindAction("SkipDialogue", EInputEvent::IE_Pressed, this, &ABasePlayerController::SkipDialogueLine);
     
@@ -599,21 +594,18 @@ void ABasePlayerController::SkipCutscene()
 
 void ABasePlayerController::OnPauseGame()
 {
-    if (!GetWorld() || !GetWorld()->GetAuthGameMode())
-        return;
-
     // PlayerGameState = EPlayerGameState::Pause; ??
     // bCharacterInputEnabled = false;
-    GetWorld()->GetAuthGameMode()->SetPause(this);
+
+    if (HasAuthority())
+        GetWorld()->GetAuthGameMode()->SetPause(this);
+
+    GameHUD->ChangeGameState(EMLGameState::Pause);
 }
 
-void ABasePlayerController::OnJournalOpen()
+void ABasePlayerController::OpenJournal()
 {
-    if (!GetWorld() || !GetWorld()->GetAuthGameMode())
-        return;
-
-    const auto GameMode = Cast<AMLGameModeBase>(GetWorld()->GetAuthGameMode());
-    GameMode->OpenJournal(this);
+    GameHUD->OpenJournal(this);
 }
 
 void ABasePlayerController::SaveGame()
@@ -737,17 +729,17 @@ void ABasePlayerController::OnMeleeWeaponEquipped()
     }
 }
 
-void ABasePlayerController::OnGameStateChanged(EMLGameState State)
+void ABasePlayerController::OnChangeMouseCursorState(bool bShowCursor)
 {
-    if (State == EMLGameState::InProgress)
-    {
-        SetInputMode(FInputModeGameOnly());
-        bShowMouseCursor = false;
-    }
-    else
+    if (bShowCursor)
     {
         SetInputMode(FInputModeUIOnly());
         bShowMouseCursor = true;
+    }
+    else
+    {
+        SetInputMode(FInputModeGameOnly());
+        bShowMouseCursor = false;
     }
 }
 
@@ -837,3 +829,7 @@ void ABasePlayerController::OnItemPickedUp(const FDataTableRowHandle& ItemDTRH)
     QuestSystem->OnItemPickedUp(PlayerCharacter->GetInventoryComponent(), ItemDTRH);
 }
 
+void ABasePlayerController::OnCharacterDied(const ABaseCharacter* BaseCharacter)
+{
+    GameHUD->ChangeGameState(EMLGameState::GameOver);    
+}

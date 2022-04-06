@@ -88,6 +88,14 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 	}
 }
 
+
+FRotator ABaseCharacter::GetAimOffset() const
+{
+	FVector AimDirectionWorld = GetBaseAimRotation().Vector();
+	FVector AimDirectionLocal = GetTransform().InverseTransformVectorNoScale(AimDirectionWorld);
+	return AimDirectionLocal.ToOrientationRotator();
+}
+
 void ABaseCharacter::OnLevelDeserialized_Implementation()
 {
     
@@ -95,11 +103,9 @@ void ABaseCharacter::OnLevelDeserialized_Implementation()
 
 void ABaseCharacter::CreateLoadout()
 {
-    if (bIsLoadoutCreated==true)
-    {
+    if (bIsLoadoutCreated)
         return;
-    }
-    UE_LOG(LogTemp,Warning,TEXT("%s loadout created"),*GetNameSafe(this))
+
     CharacterEquipmentComponent->CreateLoadout();
     bIsLoadoutCreated=true;
 }

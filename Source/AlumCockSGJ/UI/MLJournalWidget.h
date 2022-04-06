@@ -22,6 +22,7 @@ class ALUMCOCKSGJ_API UMLJournalWidget : public UMLBaseWidget
     GENERATED_BODY()
 public:
     virtual void Show() override;
+    virtual void Close() override;
     
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
@@ -43,7 +44,7 @@ protected:
     FText TextComplitedQuest;
 
     UPROPERTY(meta = (BindWidget))
-    UButton* ClearPauseButton;
+    UButton* CloseButton;
 
     UPROPERTY(meta = (BindWidget))
     UVerticalBox* VBox;
@@ -70,10 +71,7 @@ private:
 
     UPROPERTY()
     UMLQuestItemWidget* ActiveQuestWidget;
-
-    UFUNCTION()
-    void OnClearPause();
-
+    
     void AddVerticalSpacer() const;
     void ClearWidgets();
     void UpdateContent(const FJournalModel& JournalModel);

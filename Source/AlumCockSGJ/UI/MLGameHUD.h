@@ -2,7 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "MLBaseWidget.h"
-#include "Characters/Controllers/BasePlayerController.h"
+#include "PlayerHUDWidget.h"
+#include "UITypes.h"
 #include "Game/MLCoreTypes.h"
 #include "GameFramework/HUD.h"
 #include "MLGameHUD.generated.h"
@@ -17,19 +18,23 @@ class ALUMCOCKSGJ_API AMLGameHUD : public AHUD
 public:
     virtual void DrawHUD() override;
     UPlayerHUDWidget* GetPlayerHUD();
+    void ChangeGameState(EMLGameState State);
+    void OpenJournal(APlayerController* PC);
 
+    mutable FChangeMouseCursorEvent ChangeMouseCursorEvent;
+    
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<UUserWidget> PlayerHUDWidgetClass;
+    TSubclassOf<UMLBaseWidget> PlayerHUDWidgetClass;
     
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<UUserWidget> PauseWidgetClass;
+    TSubclassOf<UMLBaseWidget> PauseWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<UUserWidget> GameOverWidgetClass;
+    TSubclassOf<UMLBaseWidget> GameOverWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
-    TSubclassOf<UUserWidget> JournalWidgetClass;
+    TSubclassOf<UMLBaseWidget> JournalWidgetClass;
 
     virtual void BeginPlay() override;
 
@@ -40,9 +45,7 @@ private:
     UPROPERTY()
     UMLBaseWidget* CurrentWidget = nullptr;
 
-    void DrawCrossHair();
-    void OnGameStateChanged(EMLGameState State);
-
+    void OnChangeMouseCursorEvent(bool bActive);
     void PrepareWidgets();
     bool bInitialized = false;
 };

@@ -6,7 +6,13 @@
 #include "Actors/Projectiles/Projectile.h"
 #include "Characters/BaseHumanoidCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Sound/SoundCue.h"
+
+UCharacterEquipmentComponent::UCharacterEquipmentComponent()
+{
+	SetIsReplicatedByDefault(true);
+}
 
 void UCharacterEquipmentComponent::BeginPlay()
 {
@@ -168,6 +174,8 @@ void UCharacterEquipmentComponent::EquipItem(EEquipmentSlot NewSlot)
 		
 		GetWorld()->GetTimerManager().SetTimer(ChangingEquipmentTimer, this, &UCharacterEquipmentComponent::OnWeaponsChanged, EquipmentDuration);
 		CharacterOwner->OnActionStarted(ECharacterAction::ChangeEquipment);
+		if (GetOwnerRole() == ROLE_AutonomousProxy)
+			Server_EquipItemInSlot(NewSlot);
 	}
 }
 
@@ -637,3 +645,24 @@ bool UCharacterEquipmentComponent::IsPreferStrafing() const
 	auto EquippedItem = GetEquippedItem();
 	return IsValid(EquippedItem) ? EquippedItem->IsPreferStrafing() : false;
 }
+
+#pragma region REPLICATION
+
+void UCharacterEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCharacterEquipmentComponent, EquippedSlot)
+}
+
+void UCharacterEquipmentComponent::Server_EquipItemInSlot_Implementation(EEquipmentSlot Slot)
+{
+	EquipItem(Slot);
+}
+
+void UCharacterEquipmentComponent::OnRep_OnEquippedSlot(EEquipmentSlot PreviousSlot)
+{
+	if (CharacterOwner)
+		EquipItem(EquippedSlot);
+}
+
+#pragma endregion REPLICATION

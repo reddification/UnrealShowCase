@@ -5,22 +5,26 @@
 #include "Game/MLGameModeBase.h"
 #include "UI/MLBaseWidget.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogMLGameHUD, All, All);
-
 void AMLGameHUD::DrawHUD()
 {
     Super::DrawHUD();
+}
+
+void AMLGameHUD::OnChangeMouseCursorEvent(bool bActive)
+{
+    ChangeMouseCursorEvent.ExecuteIfBound(bActive);
 }
 
 void AMLGameHUD::PrepareWidgets()
 {
     if (bInitialized)
         return;
-    
-    GameWidgets.Add(EMLGameState::InProgress, CreateWidget<UMLBaseWidget>(GetWorld(), PlayerHUDWidgetClass));
-    GameWidgets.Add(EMLGameState::Pause, CreateWidget<UMLBaseWidget>(GetWorld(), PauseWidgetClass));
-    GameWidgets.Add(EMLGameState::GameOver, CreateWidget<UMLBaseWidget>(GetWorld(), GameOverWidgetClass));
-    GameWidgets.Add(EMLGameState::Journal, CreateWidget<UMLBaseWidget>(GetWorld(), JournalWidgetClass));
+
+    auto World = GetWorld();
+    GameWidgets.Add(EMLGameState::Playing, CreateWidget<UMLBaseWidget>(World, PlayerHUDWidgetClass));
+    GameWidgets.Add(EMLGameState::Pause, CreateWidget<UMLBaseWidget>(World, PauseWidgetClass));
+    GameWidgets.Add(EMLGameState::GameOver, CreateWidget<UMLBaseWidget>(World, GameOverWidgetClass));
+    GameWidgets.Add(EMLGameState::Journal, CreateWidget<UMLBaseWidget>(World, JournalWidgetClass));
 
     for (auto GameWidgetPair : GameWidgets)
     {
@@ -30,47 +34,42 @@ void AMLGameHUD::PrepareWidgets()
         
         GameWidget->AddToViewport();
         GameWidget->SetVisibility(ESlateVisibility::Hidden);
+        GameWidget->ChangeMouseCursorEvent.BindUObject(this, &AMLGameHUD::OnChangeMouseCursorEvent);
     }
 
-    const auto GameMode = Cast<AMLGameModeBase>(GetWorld()->GetAuthGameMode());
-    if (GameMode)
-        GameMode->OnGameStateChanged.AddUObject(this, &AMLGameHUD::OnGameStateChanged);
-
     bInitialized = true;
-    return;
 }
 
 void AMLGameHUD::BeginPlay()
 {
     Super::BeginPlay();
     PrepareWidgets();
+    ChangeGameState(EMLGameState::Playing);
 }
 
 UPlayerHUDWidget* AMLGameHUD::GetPlayerHUD()
 {
     PrepareWidgets();
-    return Cast<UPlayerHUDWidget>(GameWidgets[EMLGameState::InProgress]);
+    return Cast<UPlayerHUDWidget>(GameWidgets[EMLGameState::Playing]);
 }
 
-void AMLGameHUD::DrawCrossHair() {}
-
-void AMLGameHUD::OnGameStateChanged(EMLGameState State)
+void AMLGameHUD::ChangeGameState(EMLGameState State)
 {
     if (CurrentWidget)
-    {
-        CurrentWidget->SetVisibility(ESlateVisibility::Hidden);
-    }
+        CurrentWidget->Close();
 
     if (GameWidgets.Contains(State))
     {
         CurrentWidget = GameWidgets[State];
-    }
-
-    if (CurrentWidget)
-    {
-        CurrentWidget->SetVisibility(ESlateVisibility::Visible);
         CurrentWidget->Show();
     }
+}
 
-    UE_LOG(LogMLGameHUD, Display, TEXT("Game state changed: %s"), *UEnum::GetValueAsString(State));
+void AMLGameHUD::OpenJournal(APlayerController* PC)
+{
+    auto GameMode = GetWorld()->GetAuthGameMode();
+    if (GameMode)
+        GameMode->SetPause(PC);
+
+    ChangeGameState(EMLGameState::Journal);
 }

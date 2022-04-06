@@ -396,16 +396,8 @@ void APlayerCharacter::OnOutOfHealth()
     Super::OnOutOfHealth();
     SetInputDisabled(true, true);
 
-    if (GetWorld())
-    {
-        const auto GameMode = Cast<AMLGameModeBase>(GetWorld()->GetAuthGameMode());
-        if (GameMode)
-        {
-            GameMode->SetGameState(EMLGameState::GameOver);
-        }
-    }
-
-    OnDeath.Broadcast();
+    if (CharacterDeathEvent.IsBound())
+        CharacterDeathEvent.Broadcast(this);
 }
 
 void APlayerCharacter::Interact()

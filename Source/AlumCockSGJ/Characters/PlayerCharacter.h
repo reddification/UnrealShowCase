@@ -11,8 +11,6 @@
 
 #include "PlayerCharacter.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnDeath);
-
 UCLASS(Blueprintable)
 class ALUMCOCKSGJ_API APlayerCharacter : public ABaseHumanoidCharacter, public INpcInteractableActor, public INpcCharacter
 {
@@ -24,7 +22,6 @@ public:
 	UCharacterAttributesComponent* GetPlayerCharacterAttributesComponent() const { return HumanoidCharacterAttributesComponent.Get(); }
     UPlayerVisionComponent* GetCharacterVisionComponent() const { return CharacterVisionComponent; }
     UCameraComponent* GetCameraComponent() const { return CameraComponent; }
-    mutable FOnDeath OnDeath;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const override;
 	

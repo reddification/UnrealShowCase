@@ -104,7 +104,8 @@ public:
 	void InteruptVoiceLine();
 
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
-	
+	FRotator GetAimOffset() const;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

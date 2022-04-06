@@ -30,8 +30,9 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	
 	EquippedItemType = BaseCharacter->GetEquipmentComponent()->GetEquippedItemType();
-	Rotation = BaseCharacter->GetControlRotation();
-	Rotation.Pitch = Rotation.Pitch > 180 ? Rotation.Pitch - 360 : Rotation.Pitch;
+	// Rotation = BaseCharacter->GetControlRotation();
+	// Rotation.Pitch = Rotation.Pitch > 180 ? Rotation.Pitch - 360 : Rotation.Pitch;
+	Rotation = BaseCharacter->GetAimOffset();
 	const auto CurrentRangeWeapon = BaseCharacter->GetEquipmentComponent()->GetCurrentRangeWeapon();
 	if (IsValid(CurrentRangeWeapon))
 	{

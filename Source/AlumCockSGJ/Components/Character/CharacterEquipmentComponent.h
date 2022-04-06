@@ -39,10 +39,13 @@ friend AMeleeWeaponItem;
 friend AThrowableItem;
 	
 public:
+	UCharacterEquipmentComponent();
 	EEquippableItemType GetEquippedItemType() const;
 	
 	bool IsPreferStrafing() const;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& ReplicatedProps) const override;
+	
 	ARangeWeaponItem* GetCurrentRangeWeapon() const { return EquippedRangedWeapon.Get(); }
 	AMeleeWeaponItem* GetCurrentMeleeWeapon() const { return EquippedMeleeWeapon.Get(); }
 	AThrowableItem* GetCurrentThrowable() const { return ActiveThrowable.Get(); }
@@ -102,7 +105,6 @@ public:
 	void PutActiveItemInPrimaryHand() const;
 	void OnThrowableUsed();
 
-    
 	AEquippableItem* GetEquippedItem() const;
 
     virtual void OnLevelDeserialized_Implementation() override;
@@ -117,16 +119,25 @@ private:
 	// TODO TWeakObjectPtr too?
     UPROPERTY(SaveGame)
 	TWeakObjectPtr<ARangeWeaponItem> EquippedRangedWeapon ;
+	
 	TWeakObjectPtr<AThrowableItem> ActiveThrowable = nullptr;
 	TWeakObjectPtr<AMeleeWeaponItem> EquippedMeleeWeapon = nullptr;
 
-    UPROPERTY(SaveGame)
+    UPROPERTY(SaveGame, ReplicatedUsing=OnRep_OnEquippedSlot)
 	EEquipmentSlot EquippedSlot;
+	
 	EEquipmentSlot PreviousEquippedSlot = EEquipmentSlot::None;
 	EThrowableSlot EquippedThrowableSlot = EThrowableSlot::None;
-	
-	TWeakObjectPtr<class ABaseCharacter> CharacterOwner;
 
+	UPROPERTY()
+	class ABaseCharacter* CharacterOwner;
+
+	UFUNCTION(Server, Reliable)
+	void Server_EquipItemInSlot(EEquipmentSlot Slot);
+
+	UFUNCTION()
+	void OnRep_OnEquippedSlot(EEquipmentSlot PreviousSlot);
+	
 	void CompleteReloading();
 	void CompleteTogglingFireMode();
 	void OnActiveWeaponBarrelChanged();

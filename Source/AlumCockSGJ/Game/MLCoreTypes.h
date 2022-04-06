@@ -12,7 +12,7 @@ UENUM(BlueprintType)
 enum class EMLGameState : uint8
 {
     WaitingToStart = 0,
-    InProgress,
+    Playing,
     Pause,
     GameOver,
     Journal
@@ -27,7 +27,7 @@ struct FQuestLocationsWrapper
     TArray<AQuestLocation*> QuestLocations;
 };
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, EMLGameState);
+// DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, EMLGameState);
 
 USTRUCT(BlueprintType)
 struct FSubtaskItem

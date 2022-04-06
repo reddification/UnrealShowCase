@@ -11,6 +11,7 @@
 #include "Data/Quests/QuestDTR.h"
 #include "Data/Quests/QuestTaskDTR.h"
 #include "Interfaces/KillConsiderate.h"
+#include "UI/MLGameHUD.h"
 #include "BasePlayerController.generated.h"
 
 struct FDialogueParticipant;
@@ -24,6 +25,7 @@ class ALUMCOCKSGJ_API ABasePlayerController : public APlayerController, public I
 
 public:
     void OnItemPickedUp(const FDataTableRowHandle& ItemDTRH);
+    void OnCharacterDied(const ABaseCharacter* BaseCharacter);
     virtual void SetPawn(APawn* InPawn) override;
     virtual void Tick(float DeltaSeconds) override;
     bool IsIgnoreCameraPitch() const { return bIgnoreCameraPitch; }
@@ -56,7 +58,10 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
     float MaxNpcSubtitlingRange = 1000.f;
-    
+
+    UPROPERTY()
+    AMLGameHUD* GameHUD;
+
     void OnCutsceneStarted();
     void OnCutsceneEnded();
 
@@ -142,11 +147,11 @@ private:
     void OnWeaponUnequipped();
     void UpdateWeaponInfoVisibility();
     void OnMeleeWeaponEquipped();
+    void OnChangeMouseCursorState(bool bShowCursor);
     void OnPauseGame();
-    void OnJournalOpen();
+    void OpenJournal();
     void SaveGame();
     void LoadGame();
-    void OnGameStateChanged(EMLGameState State);   
 
     void OnWeaponAmmoInfoChanged(bool bInfiniteClip, bool bInfiniteAmmoSupply);
     

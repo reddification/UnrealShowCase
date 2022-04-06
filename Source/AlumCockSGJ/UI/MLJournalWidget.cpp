@@ -35,28 +35,37 @@ void UMLJournalWidget::Show()
             break;
         }
     }
-    
+
+    auto GM = GetWorld()->GetAuthGameMode();
+    auto PC = GetWorld()->GetFirstPlayerController();
+    if (GM)
+        GM->SetPause(PC);
+
+    ChangeMouseCursorEvent.ExecuteIfBound(true);
     Super::Show();
 }
 
 void UMLJournalWidget::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
-    if (ClearPauseButton)
-    {
-        ClearPauseButton->OnClicked.AddDynamic(this, &UMLJournalWidget::OnClearPause);
-    }
+    if (CloseButton)
+        CloseButton->OnClicked.AddDynamic(this, &UMLJournalWidget::Close);
 }
 
-void UMLJournalWidget::OnClearPause()
+void UMLJournalWidget::Close()
 {
     if (!GetWorld() && !GetWorld()->GetAuthGameMode())
         return;
 
     if (ActiveQuestWidget)
         ActiveQuest = ActiveQuestWidget->QuestItem;
+
+    auto GM = GetWorld()->GetAuthGameMode();
+    if (GM)
+        GM->ClearPause();
     
-    GetWorld()->GetAuthGameMode()->ClearPause();
+    ChangeMouseCursorEvent.ExecuteIfBound(false);
+    Super::Close();
 }
 
 void UMLJournalWidget::AddVerticalSpacer() const

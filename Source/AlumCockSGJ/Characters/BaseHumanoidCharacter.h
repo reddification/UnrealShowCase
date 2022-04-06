@@ -93,7 +93,7 @@ public:
 	virtual bool IsConsumingStamina() const override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	ULedgeDetectionComponent* LedgeDetectionComponent; 
