@@ -22,7 +22,7 @@ protected:
 	UTextBlock* PagesTextblock;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	class UFMODEvent* TurnPageSFX;
+	class USoundCue* TurnPageSFX;
 
 	UPROPERTY(EditAnywhere, meta=(BindWidget))
 	class UOverlay* PaginationOverlay;

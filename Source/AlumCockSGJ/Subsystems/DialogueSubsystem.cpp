@@ -1,6 +1,5 @@
 #include "DialogueSubsystem.h"
 
-#include "FMODBlueprintStatics.h"
 #include "NpcSubsystem.h"
 #include "QuestSubsystem.h"
 #include "WorldStateSubsystem.h"
@@ -8,6 +7,7 @@
 #include "AI/Data/NpcPlayerInteractionDTR.h"
 #include "Characters/Controllers/BasePlayerController.h"
 #include "Interfaces/DialogueParticipantManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/DialogueWidget.h"
 
 void UDialogueSubsystem::RegisterPlayerController(ABasePlayerController* NewController)
@@ -148,7 +148,7 @@ void UDialogueSubsystem::StartNextLine()
 		return;
 	}
 
-	const auto& DialogueLine = CurrentDialogue[CurrentLineIndex];
+	const FQuestDialogueLine& DialogueLine = CurrentDialogue[CurrentLineIndex];
 	int SafeParticipantIndex = DialogueLine.ParticipantIndex % Participants.Num();
 	auto Participant = Participants[SafeParticipantIndex].NpcDTR;
 	PlayerController->GetPlayerHUDWidget()->GetDialogueWidget()->ShowDialogueLine(DialogueLine, Participant);
@@ -164,19 +164,16 @@ void UDialogueSubsystem::StartNextLine()
 		}
 	}
 	
-	if (DialogueLine.VoiceLine)
+	if (DialogueLine.Speech)
 	{
 		if (Participants[SafeParticipantIndex].Character)
 		{
-			ExpectedDuration = Participants[SafeParticipantIndex].Character->PlayFmodEvent(DialogueLine.VoiceLine);
-			// PlayingFmodEvent = UFMODBlueprintStatics::PlayEventAttached(DialogueLine.VoiceLine, Participants[SafeParticipantIndex].Character->GetMesh(), NAME_None,
-			// 	FVector::ZeroVector, EAttachLocation::KeepRelativeOffset, true, true, true);
-			// ExpectedDuration = PlayingFmodEvent->GetLength() / 1000.f;
+			ExpectedDuration = Participants[SafeParticipantIndex].Character->PlaySound(DialogueLine.Speech);
 		}
 		else
 		{
-			UFMODBlueprintStatics::PlayEvent2D(GetWorld(), DialogueLine.VoiceLine, true);
-			// TODO set duration as well
+			UGameplayStatics::PlaySound2D(GetWorld(), DialogueLine.Speech, true);
+			ExpectedDuration = DialogueLine.Speech->Duration;
 		}
 	}
 
@@ -233,7 +230,7 @@ void UDialogueSubsystem::SkipLine()
 	if (PreviousLine >= 0 && PreviousLine < CurrentDialogue.Num())
 	{
 		const auto& DialogueLine = CurrentDialogue[PreviousLine];
-		if (DialogueLine.VoiceLine && Participants[DialogueLine.ParticipantIndex].Character)
+		if (DialogueLine.Speech && Participants[DialogueLine.ParticipantIndex].Character)
 			Participants[DialogueLine.ParticipantIndex].Character->InteruptVoiceLine();
 	}
 	

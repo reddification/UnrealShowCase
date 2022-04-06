@@ -1,10 +1,9 @@
 #include "ReadableWidget.h"
 
-#include "FMODBlueprintStatics.h"
-#include "FMODEvent.h"
 #include "Components/Overlay.h"
 #include "Components/TextBlock.h"
 #include "Data/Entities/ReadableDTR.h"
+#include "Kismet/GameplayStatics.h"
 
 bool UReadableWidget::TryOpenReadable(const FDataTableRowHandle& ReadableDTRH)
 {
@@ -57,5 +56,5 @@ void UReadableWidget::ChangePage(int NextPage)
 		CurrentPageCountWidget->SetText(FText::AsNumber(CurrentPage + 1));
 	
 	if (IsValid(TurnPageSFX))
-		UFMODBlueprintStatics::PlayEvent2D(GetWorld(), TurnPageSFX, true);
+		UGameplayStatics::PlaySound2D(GetWorld(), TurnPageSFX, true);
 }

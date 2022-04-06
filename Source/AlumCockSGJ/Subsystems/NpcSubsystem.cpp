@@ -1,6 +1,5 @@
 #include "NpcSubsystem.h"
 
-#include "FMODBlueprintStatics.h"
 #include "AI/Data/NpcDTR.h"
 #include "AI/Interfaces/NpcActivityManager.h"
 #include "AI/Interfaces/NpcCharacter.h"
@@ -58,7 +57,7 @@ FNpcReactResult UNpcSubsystem::TryReact(ABaseCharacter* Npc, const FGameplayTag&
 
 	if (RandomReaction.VoiceLine)
 	{
-		Result.ExpectedDuration = Npc->PlayFmodEvent(RandomReaction.VoiceLine);
+		Result.ExpectedDuration = Npc->PlaySound(RandomReaction.VoiceLine);
 		// auto PlayedEvent = UFMODBlueprintStatics::PlayEventAttached(RandomReaction.VoiceLine, Npc->GetCapsuleComponent(), NAME_None, FVector::ZeroVector,
 		// 	EAttachLocation::KeepRelativeOffset, true, true, true);
 	}

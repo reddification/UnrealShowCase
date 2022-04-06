@@ -9,6 +9,7 @@
 #include "Components/Combat/WeaponBarrelComponent.h"
 #include "Data/EquipmentTypes.h"
 #include "Data/DataAssets/Items/WeaponBarrelSettings.h"
+#include "Interfaces/AudioActor.h"
 #include "RangeWeaponItem.generated.h"
 
 class UAnimMontage;
@@ -19,7 +20,7 @@ DECLARE_DELEGATE(FOutOfAmmoEvent)
 class UAnimMontage;
 
 UCLASS(Blueprintable)
-class ALUMCOCKSGJ_API ARangeWeaponItem : public AEquippableItem, public IFmodPlayingActor
+class ALUMCOCKSGJ_API ARangeWeaponItem : public AEquippableItem, public IAudioActor
 {
 	GENERATED_BODY()
 	
@@ -34,8 +35,6 @@ public:
 	void StartReloading(const float DesiredReloadDuration);
 	void StopReloading(bool bInterrupted);
 
-	virtual void PlayFmodEvent(UFMODEvent* FmodEvent) override;
-	
 	UAnimMontage* GetCharacterShootMontage() const { return ActiveWeaponBarrel->GetWeaponBarrelSettings()->CharacterShootMontage; }
 	UAnimMontage* GetCharacterReloadMontage() const { return ActiveWeaponBarrel->GetWeaponBarrelSettings()->CharacterReloadMontage; }
 	const UAnimMontage* GetWeaponReloadMontage() const { return ActiveWeaponBarrel->GetWeaponBarrelSettings()->WeaponReloadMontage; }
@@ -82,6 +81,8 @@ public:
 	virtual void OnUnequipped(UCharacterEquipmentComponent* CharacterEquipmentComponent) override;
 
 	virtual void OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem) override;
+
+	virtual float PlaySound(USoundCue* Sound) override;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -96,7 +97,7 @@ protected:
 	class UCameraComponent* ScopeCameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UFMODAudioComponent* FmodAudioComponent;
+	class UAudioComponent* AudioComponent;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FName MuzzleSocketName = "muzzle_socket";

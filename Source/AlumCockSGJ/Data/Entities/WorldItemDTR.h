@@ -38,10 +38,7 @@ struct FWorldItemDTR : public FTableRowBase
     class UTexture2D* Icon;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    USoundCue* PickupSFX;
-
-    UPROPERTY(EditAnywhere, Category = "SFX")
-    class UFMODEvent* FmodSoundEvent;
+    class USoundCue* PickupSFX;
 
     // this so fucking sucks omg
     UPROPERTY(EditAnywhere, BlueprintReadOnly)

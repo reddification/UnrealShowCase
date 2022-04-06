@@ -1,8 +1,8 @@
 #include "BaseCharacter.h"
 #include "CommonConstants.h"
-#include "FMODAudioComponent.h"
 #include "NavigationSystem.h"
 #include "Actors/Interactive/BaseWorldItem.h"
+#include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/Character/BaseCharacterAttributesComponent.h"
@@ -30,8 +30,8 @@ ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
 
 	BaseMovementComponent = StaticCast<UBaseCharacterMovementComponent*>(GetCharacterMovement());
 	
-	FmodAudioComponent = CreateDefaultSubobject<UFMODAudioComponent>(TEXT("FmodAudioComponent"));
-	FmodAudioComponent->SetupAttachment(GetMesh(), "head");
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(GetMesh(), "head");
 }
 
 FCharacterInteractionParameters ABaseCharacter::GetInteractionParameters(const FGameplayTag& InteractionTag) const
@@ -406,19 +406,6 @@ void ABaseCharacter::ChangeGameplayTags(const FGameplayTagContainer& TagsContain
 		CharacterGameplayStateChangedEvent.Broadcast(GameplayStateTags);
 }
 
-float ABaseCharacter::PlayFmodEvent(UFMODEvent* FmodEvent)
-{
-	FmodAudioComponent->Stop();
-	FmodAudioComponent->SetEvent(FmodEvent);
-	FmodAudioComponent->Play();
-	return FmodAudioComponent->GetLength() / 1000.f;
-}
-
-void ABaseCharacter::InteruptVoiceLine()
-{
-	FmodAudioComponent->Stop();
-}
-
 #pragma endregion TAGS
 
 void ABaseCharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
@@ -426,4 +413,16 @@ void ABaseCharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRo
 	auto SocketTransform = GetMesh()->GetSocketTransform(SocketEyesViewpoint);
 	OutLocation = SocketTransform.GetLocation();
 	OutRotation = SocketTransform.Rotator();
+}
+
+float ABaseCharacter::PlaySound(USoundCue* Sound)
+{
+	AudioComponent->SetSound(Sound);
+	AudioComponent->Play();
+	return AudioComponent->Sound->Duration;
+}
+
+void ABaseCharacter::InteruptVoiceLine()
+{
+	AudioComponent->Stop();
 }

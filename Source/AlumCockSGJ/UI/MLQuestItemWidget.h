@@ -18,20 +18,27 @@ class ALUMCOCKSGJ_API UMLQuestItemWidget : public UUserWidget
 {
     GENERATED_BODY()
 public:
+    
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     FLinearColor NormalColor = FLinearColor::Black;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     FLinearColor HoveredColor = FLinearColor::Red;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     FLinearColor SelectedColor = FLinearColor::Blue;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-    class UFMODEvent* ClickSFX;
+    class USoundCue* ClickSFX;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
     FQuestItem QuestItem;
+    
     virtual void SynchronizeProperties() override;
 
     mutable FQuestItemActiveEvent OnQuestItemActiveEvent;
     void SetActive(bool NewActive);
+    
 protected:
     virtual void NativeOnInitialized() override;
 private:

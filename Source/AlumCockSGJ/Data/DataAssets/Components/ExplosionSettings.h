@@ -35,9 +35,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	class USoundCue* ExplosionSFX;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	class UFMODEvent* ExplosionFmodSFX;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<UDamageType> DamageTypeClass;
 };

@@ -1,6 +1,5 @@
 #include "NpcConversationComponent.h"
 
-#include "FMODBlueprintStatics.h"
 #include "AI/Data/NpcDTR.h"
 #include "AI/Interfaces/NpcCharacter.h"
 #include "Characters/BaseCharacter.h"
@@ -88,15 +87,8 @@ void UNpcConversationComponent::HandleDialogueLine(const FNpcDialogueLine& Dialo
 	if (DialogueLine.GestureOptions.Num() > 0)
 		Character->PlayAnimMontage(DialogueLine.GestureOptions[FMath::RandRange(0, DialogueLine.GestureOptions.Num() - 1)]);
 
-	if (DialogueLine.VoiceLine)
-	{
-		UFMODBlueprintStatics::PlayEventAttached(DialogueLine.VoiceLine, Character->GetMesh(), NAME_None,
-			FVector::ZeroVector, EAttachLocation::KeepRelativeOffset, true, true, true);
-	}
-	else if (DialogueLine.Speech)
-	{
+	if (DialogueLine.Speech)
 		UGameplayStatics::PlaySoundAtLocation(Character, DialogueLine.Speech, Character->GetActorLocation());
-	}
 
 	// TODO 3 line traces from speaker to character. If any hits - show subtitles
 	if (false)

@@ -48,10 +48,7 @@ public:
 	class USoundCue* ShotSound;
 
 	UPROPERTY(EditAnywhere, Category = "SFX")
-	class UFMODEvent* FmodSoundEvent;
-
-	UPROPERTY(EditAnywhere, Category = "SFX")
-	class UFMODEvent* ShootWithNoAmmoSFX;
+	USoundCue* ShootWithNoAmmoSFX;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(UIMin = 0, ClampMin = 0), Category="SFX|AI")
 	float AiShotLoudness = 1.f;

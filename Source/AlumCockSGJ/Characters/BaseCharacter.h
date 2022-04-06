@@ -11,12 +11,12 @@
 #include "Data/DataAssets/Characters/BaseCharacterDataAsset.h"
 #include "Data/Entities/SpawnItemDescription.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/AudioActor.h"
 #include "Interfaces/GameplayTagActor.h"
 #include "Interfaces/Killable.h"
 #include "SaveSystem/SaveSubsystemInterface.h"
 #include "BaseCharacter.generated.h"
 
-class UFMODEvent;
 class UCharacterEquipmentComponent;
 class UBaseCharacterAttributesComponent;
 class UCharacterCombatComponent;
@@ -28,7 +28,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FCharacterDeathEvent, const ABaseCharacter* 
 
 UCLASS()
 class ALUMCOCKSGJ_API ABaseCharacter : public ACharacter, public IGenericTeamAgentInterface, public IKillable,
-	public IGameplayTagActor, public IGameplayTagAssetInterface, public ISaveSubsystemInterface 
+	public IGameplayTagActor, public IGameplayTagAssetInterface, public ISaveSubsystemInterface, public IAudioActor
 {
 	GENERATED_BODY()
 
@@ -44,7 +44,7 @@ public:
 	mutable FCharacterGameplayStateChanged CharacterGameplayStateChangedEvent;
 	mutable FCharacterDeathEvent CharacterDeathEvent;
 	
-    virtual  void OnLevelDeserialized_Implementation() override;
+    virtual void OnLevelDeserialized_Implementation() override;
 
 #pragma region INPUT
 	virtual void Turn(float Value) {}
@@ -86,7 +86,8 @@ public:
 	virtual bool SetDesiredRotation(const FRotator& Rotator);
 	void UnsetDesiredRotation();
 	virtual FCharacterInteractionParameters GetInteractionParameters(const FGameplayTag& InteractionTag) const;
-	
+	void InteruptVoiceLine();
+
 	UPROPERTY(SaveGame)
     bool bIsLoadoutCreated=false;
 
@@ -96,16 +97,12 @@ public:
 	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 	virtual void ChangeGameplayTags(const FGameplayTagContainer& TagsContainer, bool bAdd = true) override;
 
-	// Returns expected duration seconds
-	UFUNCTION(BlueprintCallable)
-	float PlayFmodEvent(UFMODEvent* FmodEvent);
-
-	UFUNCTION(BlueprintCallable)
-	void InteruptVoiceLine();
-
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 	FRotator GetAimOffset() const;
 
+	UFUNCTION(BlueprintCallable)
+	virtual float PlaySound(class USoundCue* Sound) override;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -120,7 +117,7 @@ protected:
 	UCharacterCombatComponent* CharacterCombatComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UFMODAudioComponent* FmodAudioComponent;
+	class UAudioComponent* AudioComponent;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UBaseCharacterDataAsset* CharacterSettings;

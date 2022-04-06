@@ -3,9 +3,7 @@
 #include "CoreMinimal.h"
 #include "DebugSubsystem.h"
 #include "Components/SceneComponent.h"
-#include "Data/DecalSettings.h"
-#include "FMODEvent.h"
-#include "Interfaces/FmodPlayingActor.h"
+#include "Interfaces/AudioActor.h"
 #include "BarrelComponent.generated.h"
 
 class UNiagaraSystem;
@@ -45,8 +43,7 @@ private:
     void OnProjectileHit(const FHitResult& HitResult, const FVector& Direction);
     
     TWeakObjectPtr<AController> CachedShooterController = nullptr;
-
-    TScriptInterface<IFmodPlayingActor> FmodPlayingOwner;
+    TScriptInterface<IAudioActor> AudioActorOwner;
     
     int32 Ammo = 0;
 

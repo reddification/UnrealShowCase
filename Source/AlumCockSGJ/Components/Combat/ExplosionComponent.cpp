@@ -1,8 +1,6 @@
 #include "ExplosionComponent.h"
 
 #include "CommonConstants.h"
-#include "FMODBlueprintStatics.h"
-#include "FMODEvent.h"
 #include "Data/DataAssets/Components/ExplosionSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
@@ -32,9 +30,6 @@ void UExplosionComponent::Explode(AController* Controller)
 	if (ExplosionSettings->ExplosionSFX)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSettings->ExplosionSFX, ExplosionLocation);
 
-	if (IsValid(ExplosionSettings->ExplosionFmodSFX))
-		UFMODBlueprintStatics::PlayEventAtLocation(GetOwner(), ExplosionSettings->ExplosionFmodSFX, FTransform(ExplosionLocation), true);
-	
 	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetOwner()->GetActorLocation(),
 		ExplosionSettings->AiExplosionLoudness, GetOwner(), ExplosionSettings->AiExplosionSoundRange, SoundStimulusTag_Explosion);
 

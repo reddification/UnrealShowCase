@@ -16,7 +16,6 @@ public class AlumCockSGJ : ModuleRules
 			"GameplayTasks",
 			"OnlineSubsystem",
 			"OnlineSubsystemUtils",
-			"FMODStudio",
 			"LevelSequence",
 			"MovieScene",
 			

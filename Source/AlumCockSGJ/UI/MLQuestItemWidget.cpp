@@ -1,11 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "UI/MLQuestItemWidget.h"
 
-#include "FMODBlueprintStatics.h"
+#include "Components/AudioComponent.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 void UMLQuestItemWidget::NativeOnInitialized()
 {
@@ -37,14 +37,10 @@ void UMLQuestItemWidget::OnClick()
     {
         TitleText->SetColorAndOpacity(SelectedColor);
         if (ClickSFX)
-        {
-            UFMODBlueprintStatics::PlayEvent2D(GetWorld(), ClickSFX, true);
-        }
+            UGameplayStatics::PlaySound2D(GetWorld(), ClickSFX, true);
 
         if (OnQuestItemActiveEvent.IsBound())
-        {
             OnQuestItemActiveEvent.Broadcast(QuestItem.Id);
-        }
     }
 }
 

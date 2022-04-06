@@ -1,10 +1,10 @@
-#include "Actors/Equipment/Weapons/RangeWeaponItem.h"
+#include "RangeWeaponItem.h"
 
-#include "FMODBlueprintStatics.h"
 #include "CommonConstants.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/BaseHumanoidCharacter.h"
 #include "Characters/Controllers/BasePlayerController.h"
+#include "Components/AudioComponent.h"
 #include "Components/Combat/CharacterCombatComponent.h"
 #include "Components/Combat/WeaponBarrelComponent.h"
 #include "Data/DataAssets/Items/RangeWeaponSettings.h"
@@ -22,8 +22,8 @@ ARangeWeaponItem::ARangeWeaponItem()
     ScopeCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Scope"));
     ScopeCameraComponent->SetupAttachment(WeaponMeshComponent);
 
-    FmodAudioComponent = CreateDefaultSubobject<UFMODAudioComponent>(TEXT("Audio"));
-    FmodAudioComponent->SetupAttachment(WeaponMeshComponent);
+    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio"));
+    AudioComponent->SetupAttachment(WeaponMeshComponent, MuzzleSocketName);
 }
 
 void ARangeWeaponItem::BeginPlay()
@@ -95,6 +95,13 @@ void ARangeWeaponItem::OnDropped(UCharacterEquipmentComponent* EquipmentComponen
     PickableEquipmentItem->SetDroppedState(GetAmmo());
 }
 
+float ARangeWeaponItem::PlaySound(USoundCue* Sound)
+{
+    AudioComponent->SetSound(Sound);
+    AudioComponent->Play();
+    return AudioComponent->Sound->Duration;
+}
+
 EReticleType ARangeWeaponItem::GetReticleType() const
 {
     return bAiming ? ActiveWeaponBarrel->GetWeaponBarrelSettings()->AimReticleType : RangeWeaponSettings->ReticleType;
@@ -120,13 +127,6 @@ void ARangeWeaponItem::StopFiring()
     bFiring = false;
 }
 
-void ARangeWeaponItem::PlayFmodEvent(UFMODEvent* SFX)
-{
-    FmodAudioComponent->Stop();
-    FmodAudioComponent->SetEvent(SFX);
-    FmodAudioComponent->Play();
-}
-
 bool ARangeWeaponItem::Shoot()
 {
     int32 Ammo = GetAmmo();
@@ -135,7 +135,8 @@ bool ARangeWeaponItem::Shoot()
         auto NoAmmoSFX = ActiveWeaponBarrel->GetWeaponBarrelSettings()->ShootWithNoAmmoSFX;
         if (IsValid(NoAmmoSFX))
         {
-            PlayFmodEvent(NoAmmoSFX);
+            AudioComponent->SetSound(NoAmmoSFX);
+            AudioComponent->Play();
         }
 
         if (!bReloading)
@@ -143,6 +144,7 @@ bool ARangeWeaponItem::Shoot()
             OutOfAmmoEvent.ExecuteIfBound();
             StopFiring();
         }
+        
         return false;
     }
 

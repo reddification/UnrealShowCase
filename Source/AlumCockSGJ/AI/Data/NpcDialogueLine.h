@@ -14,9 +14,6 @@ struct FNpcDialogueLine
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta=(MultiLine = true))
 	FText Text;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	class UFMODEvent* VoiceLine;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class USoundCue* Speech;
 	

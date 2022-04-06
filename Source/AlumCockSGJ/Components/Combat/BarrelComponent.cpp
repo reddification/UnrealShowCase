@@ -3,7 +3,6 @@
 #include "DrawDebugHelpers.h"
 #include "CommonConstants.h"
 #include "DebugSubsystem.h"
-#include "FMODBlueprintStatics.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
@@ -14,6 +13,13 @@
 #include "Data/DataAssets/Items/BarrelSettings.h"
 #include "Perception/AISense_Hearing.h"
 #include "Sound/SoundCue.h"
+
+void UBarrelComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    checkf(IsValid(BarrelSettings), TEXT("BarrelSettings must be set"));
+    AudioActorOwner = GetOwner();
+}
 
 void UBarrelComponent::Shoot(const FVector& ViewLocation, const FVector& Direction, AController* ShooterController)
 {
@@ -160,31 +166,16 @@ void UBarrelComponent::FinalizeShot()
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BarrelSettings->MuzzleFlashFX, GetComponentLocation(), GetComponentRotation());
 
     if (IsValid(BarrelSettings->ShotSound))
-        UGameplayStatics::SpawnSoundAttached(BarrelSettings->ShotSound, GetAttachmentRoot());
-
-    if (IsValid(BarrelSettings->FmodSoundEvent))
     {
-        if (FmodPlayingOwner != nullptr)
-        {
-            FmodPlayingOwner->PlayFmodEvent(BarrelSettings->FmodSoundEvent);
-        }
+        if (AudioActorOwner)
+            AudioActorOwner->PlaySound(BarrelSettings->ShotSound);
         else
-        {
-            UFMODBlueprintStatics::PlayEventAttached(BarrelSettings->FmodSoundEvent, this, NAME_None, FVector::ZeroVector,
-            EAttachLocation::KeepRelativeOffset, true, true, true);
-        }
+            UGameplayStatics::SpawnSoundAttached(BarrelSettings->ShotSound, GetAttachmentRoot());
     }
-    
+
     // TODO tweak params
     UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetComponentLocation(), BarrelSettings->AiShotLoudness,
         GetOwner(), BarrelSettings->AiShotSoundRange, SoundStimulusTag_Shot);
-}
-
-void UBarrelComponent::BeginPlay()
-{
-    Super::BeginPlay();
-    checkf(IsValid(BarrelSettings), TEXT("BarrelSettings must be set"));
-    FmodPlayingOwner = GetOwner();
 }
 
 #if UE_BUILD_DEVELOPMENT || UE_BUILD_DEBUG

@@ -29,7 +29,7 @@ struct FNpcReaction
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UFMODEvent* VoiceLine;
+	USoundCue* VoiceLine;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FText SpeechText;
