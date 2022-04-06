@@ -281,7 +281,7 @@ void ABaseHumanoidCharacter::Landed(const FHitResult& Hit)
 	{
 		float FallDamage = HumanoidCharacterSettings->FallDamageCurve->GetFloatValue(-VerticalSpeed);
 		if (FallDamage > 0.f)
-			TakeDamage(FallDamage, GetEnvironmentDamageEvent(), GetController(), Hit.Actor.Get());
+			TakeDamage(FallDamage, GetEnvironmentDamageEvent(), GetController(), Hit.GetActor());
 	}
 }
 

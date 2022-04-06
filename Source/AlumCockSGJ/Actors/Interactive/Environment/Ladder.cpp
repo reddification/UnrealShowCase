@@ -1,10 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Ladder.h"
 
 #include "Components/BoxComponent.h"
 #include "CommonConstants.h"
+#include "Engine/Classes/Components/InstancedStaticMeshComponent.h"
 #include "GameFramework/Character.h"
 
 ALadder::ALadder()

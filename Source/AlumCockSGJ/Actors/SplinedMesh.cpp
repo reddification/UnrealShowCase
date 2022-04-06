@@ -1,5 +1,6 @@
 ﻿#include "SplinedMesh.h"
 
+#include "Engine/Classes/Components/InstancedStaticMeshComponent.h"
 #include "Components/SplineComponent.h"
 
 ASplinedMesh::ASplinedMesh()

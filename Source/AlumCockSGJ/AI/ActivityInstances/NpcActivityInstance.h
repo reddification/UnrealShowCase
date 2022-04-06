@@ -14,6 +14,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "NpcActivityInstance.generated.h"
 
+class AQuestLocation;
 class UNpcActivityBaseSettings;
 class AAICitizenController;
 class UMLGameInstance;
@@ -81,7 +82,7 @@ public:
 	FActivityProgressEvent ActivityProgressEvent;
 	FNpcActivityStateChangedEvent NpcActivityStateChangedEvent;
 	
-	const AQuestLocation* GetCoreLocation() const;
+	const AQuestLocation* GetCoreLocation();
 	
 protected:
 	virtual void RestoreBlackboardStateInternal(UBlackboardComponent* Blackboard);
@@ -91,7 +92,7 @@ protected:
 	const UNpcActivityBaseSettings* ActivitySettings;
 
 	UPROPERTY()
-	const mutable AQuestLocation* CoreLocation;
+	AQuestLocation* CoreLocation;
 	
 	bool bActive = false;
 

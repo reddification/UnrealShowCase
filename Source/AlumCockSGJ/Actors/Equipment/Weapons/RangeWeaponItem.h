@@ -102,9 +102,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FName MuzzleSocketName = "muzzle_socket";
 	
-    UPROPERTY(EditAnywhere)
-    TSubclassOf<UMatineeCameraShake> CamShake;
-	
 private:
 	FTimerHandle ShootTimer;
 	FTimerHandle ChangeFireModeTimer;

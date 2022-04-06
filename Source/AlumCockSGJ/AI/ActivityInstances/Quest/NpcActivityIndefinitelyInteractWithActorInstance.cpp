@@ -15,7 +15,7 @@ FGameplayTag UNpcActivityIndefinitelyInteractWithActorInstance::GetInteractionTa
 	return Settings->InteractionTag;
 }
 
-const UNpcActivityIndefinitelyInteractWithActorSettings* UNpcActivityIndefinitelyInteractWithActorInstance::GetSettings() const
+const UNpcActivityIndefinitelyInteractWithActorSettings* UNpcActivityIndefinitelyInteractWithActorInstance::GetSettings()
 {
 	if (!IndefiniteInteractionSettings)
 		IndefiniteInteractionSettings = Cast<UNpcActivityIndefinitelyInteractWithActorSettings>(ActivitySettings);

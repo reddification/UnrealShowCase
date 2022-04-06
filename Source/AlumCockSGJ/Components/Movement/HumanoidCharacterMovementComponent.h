@@ -63,7 +63,6 @@ friend FHumanoidCharacterSavedMove;
 public:
 	void InitPostureHalfHeights();
 	virtual void BeginPlay() override;
-	// virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
 	virtual bool CanAttemptJump() const override { return Super::CanAttemptJump() || IsSliding(); }
 	bool TryStartSprint();
@@ -150,7 +149,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 #pragma region REPLICATION
-	
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
 

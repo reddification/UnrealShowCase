@@ -162,10 +162,7 @@ bool ARangeWeaponItem::Shoot()
     PlayAnimMontage(WeaponBarrelSettings->WeaponShootMontage);
     auto PlayerController = Cast<ABasePlayerController>(CachedShooterController);
     if (PlayerController)
-    {
-        PlayerController->PlayerCameraManager->StartCameraShake(CamShake);
         PlayerController->GetPlayerHUDWidget()->OnPlayerShoot(2.0);
-    }
     
     ActiveWeaponBarrel->FinalizeShot();
     if (ShootEvent.IsBound())

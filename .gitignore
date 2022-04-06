@@ -112,3 +112,5 @@ Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-Win64-DebugGame.modules
 Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin-0001.pdb
 Plugins/BTUtilityPlugin/Binaries/Win64/UE4Editor-BTUtilityPlugin-0001.pdb
 .idea/.idea.AlumCockSGJ/.idea/workspace.xml
+
+Plugins/Developer/*

@@ -114,8 +114,8 @@ void ABasePlayerController::SetupInputComponent()
 
     InputComponent->BindAction("Slide", EInputEvent::IE_Pressed, this, &ABasePlayerController::StartSliding);
     InputComponent->BindAction("Slide", EInputEvent::IE_Released, this, &ABasePlayerController::StopSliding);
-    InputComponent->BindAction("Prone", IE_Pressed, this, &ABasePlayerController::ToggleProneState);
     InputComponent->BindAction("Crouch", IE_Pressed, this, &ABasePlayerController::ToggleCrouchState);
+    InputComponent->BindAction("Prone", IE_Pressed, this, &ABasePlayerController::ToggleProneState);
 
     InputComponent->BindAction("Wallrun", EInputEvent::IE_Pressed, this, &ABasePlayerController::StartWallrun);
     InputComponent->BindAction("Wallrun", EInputEvent::IE_Released, this, &ABasePlayerController::StopWallrun);

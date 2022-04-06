@@ -52,6 +52,11 @@ void UHumanoidCharacterMovementComponent::TickComponent(float DeltaTime, ELevelT
 	// }
 }
 
+void UHumanoidCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
 float UHumanoidCharacterMovementComponent::GetMaxSpeed() const
 {
 	float RawSpeed = 0.f;
@@ -153,17 +158,6 @@ void UHumanoidCharacterMovementComponent::UpdateCharacterStateBeforeMovement(flo
 }
 
 #pragma region REPLICATION
-
-// void UHumanoidCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-// {
-// 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-// 	FDoRepLifetimeParams RepParams;
-// 	// RepParams.Condition = ELifetimeCondition::COND_SimulatedOnly;
-// 	// DOREPLIFETIME_WITH_PARAMS(UHumanoidCharacterMovementComponent, bSprinting, RepParams)
-// 	// DOREPLIFETIME_WITH_PARAMS(UHumanoidCharacterMovementComponent, CurrentPosture, RepParams)
-// 	DOREPLIFETIME(UHumanoidCharacterMovementComponent, bSprinting)
-// 	DOREPLIFETIME(UHumanoidCharacterMovementComponent, CurrentPosture)
-// }
 
 void FHumanoidCharacterSavedMove::Clear()
 {
@@ -317,10 +311,13 @@ void UHumanoidCharacterMovementComponent::RequestCrouch()
 
 void UHumanoidCharacterMovementComponent::Crouch(bool bClientSimulation)
 {
-	if (!bClientSimulation && !CanCrouchInCurrentState() || !IsMovingOnGround() || IsSprinting() || !HumanoidCharacter->CanStartAction(ECharacterAction::Crouch))
-	{
+	bool canCrouchAtAll = CanCrouchInCurrentState();
+	bool bOnGround = IsMovingOnGround();
+	bool bSprintingRN = IsSprinting();
+	bool bCanStartCrouchAction = HumanoidCharacter->CanStartAction(ECharacterAction::Crouch);
+	
+	if (!IsMovingOnGround() || IsSprinting() || !HumanoidCharacter->CanStartAction(ECharacterAction::Crouch))
 		return;
-	}
 	
 	const auto DefaultCharacter = CharacterOwner->GetClass()->GetDefaultObject<ACharacter>();
 	float ScaledHalfHeightAdjust = 0.f;

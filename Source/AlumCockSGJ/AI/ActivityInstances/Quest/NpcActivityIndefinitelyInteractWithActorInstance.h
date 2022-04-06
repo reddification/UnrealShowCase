@@ -20,9 +20,9 @@ protected:
 private:
 	
 	UPROPERTY()
-	const mutable UNpcActivityIndefinitelyInteractWithActorSettings* IndefiniteInteractionSettings;
+	const UNpcActivityIndefinitelyInteractWithActorSettings* IndefiniteInteractionSettings;
 	
-	const UNpcActivityIndefinitelyInteractWithActorSettings* GetSettings() const;
+	const UNpcActivityIndefinitelyInteractWithActorSettings* GetSettings();
 };
 
 UCLASS()

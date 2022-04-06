@@ -134,7 +134,7 @@ void UNpcActivityInstanceBase::RestoreBlackboardState(UBlackboardComponent* Blac
 	RestoreBlackboardStateInternal(Blackboard);
 }
 
-const AQuestLocation* UNpcActivityInstanceBase::GetCoreLocation() const
+const AQuestLocation* UNpcActivityInstanceBase::GetCoreLocation()
 {
 	if (!CoreLocation && !ActivitySettings->BaseActivityLocationDTRH.IsNull())
 	{
