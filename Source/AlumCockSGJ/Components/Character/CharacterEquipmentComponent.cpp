@@ -5,6 +5,7 @@
 #include "Actors/Interactive/Pickables/PickableEquipmentItem.h"
 #include "Actors/Projectiles/Projectile.h"
 #include "Characters/BaseHumanoidCharacter.h"
+#include "Components/Combat/CharacterCombatComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Sound/SoundCue.h"
@@ -21,11 +22,24 @@ void UCharacterEquipmentComponent::BeginPlay()
 	checkf(Owner->IsA<ABaseCharacter>(), TEXT("CharacterEquipmentComponent is supposed to work only with AGCBaseCharacter derivatives"));
 	checkf(IsValid(EquipmentSettings), TEXT("Equipment settings must be set!"));
 	CharacterOwner = StaticCast<ABaseCharacter*>(Owner);
-	EquippedSlot = EEquipmentSlot::None;
+	// EquippedSlot = EEquipmentSlot::None;
 }
 
 void UCharacterEquipmentComponent::CreateLoadout()
 {
+	switch (GetOwnerRole())
+	{
+		case ROLE_AutonomousProxy:
+			EquipItem(EquippedSlot);
+			return;
+		break;
+		case ROLE_Authority:
+			break;
+		case ROLE_SimulatedProxy:
+		default:
+			break;
+	}
+	
 	Loadout.AddZeroed((uint32)EEquipmentSlot::MAX);
 	Throwables.AddZeroed((uint32)EThrowableSlot::MAX);
 	Pouch.AddZeroed((uint32)EAmmunitionType::MAX);
@@ -82,12 +96,12 @@ void UCharacterEquipmentComponent::EquipSecondaryThrowable()
 
 bool UCharacterEquipmentComponent::IsWeaponEquipped() const
 {
-	return EquippedRangedWeapon.IsValid() || EquippedMeleeWeapon.IsValid();
+	return IsValid(EquippedRangedWeapon) || IsValid(EquippedMeleeWeapon);
 }
 
 bool UCharacterEquipmentComponent::IsThrowableEquipped() const
 {
-	return ActiveThrowable.IsValid() && Pouch[(uint8)ActiveThrowable->GetAmmoType()] > 0;
+	return IsValid(ActiveThrowable) && Pouch[(uint8)ActiveThrowable->GetAmmoType()] > 0;
 }
 
 bool UCharacterEquipmentComponent::PickUpItem(const TSubclassOf<AEquippableItem>& ItemClass, const FPickUpItemData& PickUpItemData)
@@ -105,7 +119,7 @@ bool UCharacterEquipmentComponent::PickUpAmmo(EAmmunitionType AmmoType, int Ammo
 	if (Ammo <= 0)
 		return false;
 	
-	if (bThrowable && ActiveThrowable.IsValid() && ActiveThrowable->GetAmmoType() != AmmoType)
+	if (bThrowable && IsValid(ActiveThrowable) && ActiveThrowable->GetAmmoType() != AmmoType)
 		return false;
 	
 	int32 AmmoLimit = GetAmmunationLimit(AmmoType);
@@ -116,7 +130,7 @@ bool UCharacterEquipmentComponent::PickUpAmmo(EAmmunitionType AmmoType, int Ammo
 	int32 NewAmmo = FMath::Min(AmmoLimit, CurrentAmmo + Ammo);
 	bool bPickedUp = NewAmmo != CurrentAmmo;
 	
-	if (ActiveThrowable.IsValid() && ActiveThrowable->GetAmmoType() == AmmoType && bPickedUp)
+	if (IsValid(ActiveThrowable) && ActiveThrowable->GetAmmoType() == AmmoType && bPickedUp)
 	{
 		if (CurrentAmmo <= 0)
 			ActiveThrowable->SpawnAttachedProjectile();
@@ -125,7 +139,7 @@ bool UCharacterEquipmentComponent::PickUpAmmo(EAmmunitionType AmmoType, int Ammo
 		ThrowablesCountChanged.ExecuteIfBound(NewAmmo);
 	}
 	
-	if (EquippedRangedWeapon.IsValid() && EquippedRangedWeapon->GetAmmunitionType() == AmmoType)
+	if (IsValid(EquippedRangedWeapon) && EquippedRangedWeapon->GetAmmunitionType() == AmmoType)
 		WeaponAmmoChangedEvent.ExecuteIfBound(EquippedRangedWeapon->GetAmmo(), NewAmmo);
 	
 	CurrentAmmo = NewAmmo;
@@ -145,7 +159,7 @@ void UCharacterEquipmentComponent::EquipItem(int delta)
 		NextSlotIndex += delta;
 
 	if (NextSlotIndex == (uint8)EEquipmentSlot::None)
-		UnequipItem();
+		UnequipItem(false);
 	else if (NextSlotIndex != (uint8)EEquipmentSlot::MAX)
 		EquipItem((EEquipmentSlot)NextSlotIndex);
 }
@@ -257,9 +271,9 @@ void UCharacterEquipmentComponent::InterruptChangingEquipment()
 	bChangingEquipment = false;
 }
 
-void UCharacterEquipmentComponent::UnequipItem()
+void UCharacterEquipmentComponent::UnequipItem(bool bForce)
 {
-	if (EquippedSlot == EEquipmentSlot::None || bChangingEquipment || !CharacterOwner->CanStartAction(ECharacterAction::ChangeEquipment))
+	if ((EquippedSlot == EEquipmentSlot::None && !bForce) || bChangingEquipment || !CharacterOwner->CanStartAction(ECharacterAction::ChangeEquipment))
 		return;
 
 	ActiveEquippingData.OldItem = GetEquippedItem();
@@ -271,7 +285,9 @@ void UCharacterEquipmentComponent::UnequipItem()
 	ActiveEquippingData.Montage = GetEquippedItem()->GetCharacterUnequipMontage();
 	ActiveEquippingData.EquipmentSlot = EEquipmentSlot::None;
 	ActiveEquippingData.bNotified = false;
-
+	if (GetOwnerRole() == ROLE_AutonomousProxy)
+		Server_EquipItemInSlot(EEquipmentSlot::None);
+	
 	if (IsValid(ActiveEquippingData.Montage))
 		CharacterOwner->PlayAnimMontageWithDuration(ActiveEquippingData.Montage, EquipmentDuration);
 		
@@ -323,7 +339,7 @@ void UCharacterEquipmentComponent::DestroyEquipment()
 
 bool UCharacterEquipmentComponent::CanReload()
 {
-	if (bReloading || !EquippedRangedWeapon.IsValid() || !CharacterOwner->CanStartAction(ECharacterAction::Reload))
+	if (bReloading || !IsValid(EquippedRangedWeapon) || !CharacterOwner->CanStartAction(ECharacterAction::Reload))
 	{
 		return false;
 	}
@@ -368,7 +384,7 @@ void UCharacterEquipmentComponent::InterruptReloading()
 	}
 	
 	bReloading = false;
-	if (EquippedRangedWeapon.IsValid())
+	if (IsValid(EquippedRangedWeapon))
 	{
 		EquippedRangedWeapon->StopReloading(true);
 		UAnimMontage* CharacterReloadMontage = EquippedRangedWeapon->GetCharacterReloadMontage();
@@ -393,7 +409,7 @@ void UCharacterEquipmentComponent::CompleteReloading()
 		return;
 	
 	bReloading = false;
-	if (!EquippedRangedWeapon.IsValid())
+	if (!IsValid(EquippedRangedWeapon))
 		return;
 
 	int32 ClipCapacity = EquippedRangedWeapon->GetClipCapacity();
@@ -433,7 +449,7 @@ void UCharacterEquipmentComponent::ReloadInsertShells(uint8 ShellsInsertedAtOnce
 		return;
 	}
 
-	if (!EquippedRangedWeapon.IsValid())
+	if (!IsValid(EquippedRangedWeapon))
 	{
 		CharacterOwner->OnActionEnded(ECharacterAction::Reload);
 		bReloading = false;
@@ -467,7 +483,7 @@ void UCharacterEquipmentComponent::ReloadInsertShells(uint8 ShellsInsertedAtOnce
 
 void UCharacterEquipmentComponent::StartTogglingFireMode()
 {
-	if (!EquippedRangedWeapon.IsValid())
+	if (!IsValid(EquippedRangedWeapon))
 	{
 		return;
 	}
@@ -495,7 +511,7 @@ void UCharacterEquipmentComponent::StartTogglingFireMode()
 
 void UCharacterEquipmentComponent::InterruptTogglingFireMode()
 {
-	if (!bChangingEquipment || !EquippedRangedWeapon.IsValid())
+	if (!bChangingEquipment || !IsValid(EquippedRangedWeapon))
 	{
 		bChangingEquipment = false;
 		CharacterOwner->OnActionEnded(ECharacterAction::ToggleFireMode);
@@ -511,7 +527,7 @@ void UCharacterEquipmentComponent::InterruptTogglingFireMode()
 
 void UCharacterEquipmentComponent::CompleteTogglingFireMode()
 {
-	if (EquippedRangedWeapon.IsValid())
+	if (IsValid(EquippedRangedWeapon))
 	{
 		EquippedRangedWeapon->CompleteTogglingFireMode();
 		OnActiveWeaponBarrelChanged();
@@ -569,8 +585,9 @@ void UCharacterEquipmentComponent::DropThrowable(EThrowableSlot Slot, const FVec
 			if (Item == ActiveThrowable)
 			{
 				ActiveThrowable->DestroyAttachedProjectile();
-				ActiveThrowable.Reset();
+				ActiveThrowable = nullptr;
 			}
+			
 			Item->OnDropped(this, SpawnedItem);
 		}
 	}
@@ -588,7 +605,7 @@ EEquippableItemType UCharacterEquipmentComponent::GetEquippedItemType() const
 
 void UCharacterEquipmentComponent::OnActiveWeaponBarrelChanged()
 {
-	if (EquippedRangedWeapon.IsValid() && WeaponAmmoInfoChangedEvent.IsBound())
+	if (IsValid(EquippedRangedWeapon) && WeaponAmmoInfoChangedEvent.IsBound())
 	{
 		WeaponAmmoInfoChangedEvent.Broadcast(EquippedRangedWeapon->IsInfiniteClip(), EquippedRangedWeapon->IsInfiniteAmmoSupply());
 	}	
@@ -596,7 +613,7 @@ void UCharacterEquipmentComponent::OnActiveWeaponBarrelChanged()
 
 void UCharacterEquipmentComponent::OnAmmoChanged(int32 ClipAmmo) const
 {
-	if (EquippedRangedWeapon.IsValid())
+	if (IsValid(EquippedRangedWeapon))
 	{
 		WeaponAmmoChangedEvent.ExecuteIfBound(ClipAmmo, Pouch[(uint32)EquippedRangedWeapon->GetAmmunitionType()]);
 	}
@@ -616,15 +633,8 @@ int32 UCharacterEquipmentComponent::GetAmmunationLimit(EAmmunitionType AmmoType)
 
 AEquippableItem* UCharacterEquipmentComponent::GetEquippedItem() const
 {
-	if (EquippedRangedWeapon.IsValid())
-	{
-		return EquippedRangedWeapon.Get();
-	}
-	else if (EquippedMeleeWeapon.IsValid())
-	{
-		return EquippedMeleeWeapon.Get();
-	}
-
+	if (IsValid(EquippedRangedWeapon)) return EquippedRangedWeapon;
+	if (IsValid(EquippedMeleeWeapon)) return EquippedMeleeWeapon;
 	return nullptr;
 }
 
@@ -651,18 +661,55 @@ bool UCharacterEquipmentComponent::IsPreferStrafing() const
 void UCharacterEquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UCharacterEquipmentComponent, Throwables)
+	DOREPLIFETIME(UCharacterEquipmentComponent, Pouch)
+	DOREPLIFETIME(UCharacterEquipmentComponent, Loadout)
 	DOREPLIFETIME(UCharacterEquipmentComponent, EquippedSlot)
 }
 
 void UCharacterEquipmentComponent::Server_EquipItemInSlot_Implementation(EEquipmentSlot Slot)
 {
-	EquipItem(Slot);
+	if (Slot != EEquipmentSlot::None)
+		EquipItem(Slot);
+	else
+		UnequipItem(true);
 }
 
 void UCharacterEquipmentComponent::OnRep_OnEquippedSlot(EEquipmentSlot PreviousSlot)
 {
-	if (CharacterOwner)
+	if (!CharacterOwner)
+		CharacterOwner = StaticCast<ABaseCharacter*>(GetOwner());
+
+	if (EquippedSlot != EEquipmentSlot::None)
 		EquipItem(EquippedSlot);
+	else UnequipItem(true);
+}
+
+void UCharacterEquipmentComponent::OnRep_Loadout()
+{
+	if (!CharacterOwner)
+		return;
+
+	for (auto* Item : Loadout)
+	{
+		if (IsValid(Item))
+			Item->RegisterOnClient(this);
+	}
+
+	EquipItem(EquippedSlot);
+	// if (CharacterOwner)
+	// 	EquipItem(EquippedSlot);
+	// for (const auto* Item : Loadout)
+	// {
+	// 	// if (IsValid(Item))
+	// 	// 	UnequipItem();
+	// }
+}
+
+void UCharacterEquipmentComponent::OnRep_Throwables()
+{
+	if (CharacterOwner)
+		EquipThrowable(EquippedThrowableSlot);
 }
 
 #pragma endregion REPLICATION

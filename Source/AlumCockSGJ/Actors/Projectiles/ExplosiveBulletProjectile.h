@@ -1,11 +1,12 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "BulletProjectile.h"
 #include "Projectile.h"
 #include "ExplosiveBulletProjectile.generated.h"
 
 UCLASS()
-class ALUMCOCKSGJ_API AExplosiveBulletProjectile : public AProjectile
+class ALUMCOCKSGJ_API AExplosiveBulletProjectile : public ABulletProjectile
 {
 	GENERATED_BODY()
 

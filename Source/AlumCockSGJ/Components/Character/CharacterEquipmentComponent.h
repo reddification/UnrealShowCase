@@ -24,10 +24,6 @@ DECLARE_DELEGATE_OneParam(FAimingSpeedChangedEvent, float NewAimSpeed)
 DECLARE_DELEGATE(FAimingSpeedResetEvent)
 DECLARE_DELEGATE(FMeleeWeaponEquippedEvent)
 
-/*typedef TArray<int32, TInlineAllocator<(uint32)EAmmunitionType::MAX>> TAmmunitionArray;*/
-typedef TArray<AEquippableItem*, TInlineAllocator<(uint32)EEquipmentSlot::MAX>> TLoadoutArray;
-typedef TArray<AThrowableItem*, TInlineAllocator<(uint32)EThrowableSlot::MAX>> TThrowablesArray;
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ALUMCOCKSGJ_API UCharacterEquipmentComponent : public UActorComponent, public ISaveSubsystemInterface
 {
@@ -93,7 +89,7 @@ public:
 	void EquipItem(int delta);
 	void InterruptChangingEquipment();
 	bool CanReload();
-	void UnequipItem();
+	void UnequipItem(bool bForce);
 
 	bool IsChangingEquipment() const { return bChangingEquipment; }
 
@@ -108,7 +104,7 @@ public:
 	AEquippableItem* GetEquippedItem() const;
 
     virtual void OnLevelDeserialized_Implementation() override;
-
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -116,12 +112,9 @@ protected:
 	class UEquipmentSettings* EquipmentSettings;
 
 private:
-	// TODO TWeakObjectPtr too?
-    UPROPERTY(SaveGame)
-	TWeakObjectPtr<ARangeWeaponItem> EquippedRangedWeapon ;
-	
-	TWeakObjectPtr<AThrowableItem> ActiveThrowable = nullptr;
-	TWeakObjectPtr<AMeleeWeaponItem> EquippedMeleeWeapon = nullptr;
+	TObjectPtr<ARangeWeaponItem> EquippedRangedWeapon = nullptr;
+	TObjectPtr<AThrowableItem> ActiveThrowable = nullptr;
+	TObjectPtr<AMeleeWeaponItem> EquippedMeleeWeapon = nullptr;
 
     UPROPERTY(SaveGame, ReplicatedUsing=OnRep_OnEquippedSlot)
 	EEquipmentSlot EquippedSlot;
@@ -146,16 +139,23 @@ private:
 	int32 GetAmmunationLimit(EAmmunitionType AmmoType) const;
 	
     UPROPERTY(SaveGame)
-    TArray<UClass*>SavedLoadout;
+    TArray<UClass*> SavedLoadout;
     
-    UPROPERTY(SaveGame)
+    UPROPERTY(Replicated)
 	TArray<int32> Pouch;
 	
-    UPROPERTY()
+    UPROPERTY(ReplicatedUsing=OnRep_Loadout)
 	TArray<AEquippableItem*> Loadout;
-	
-	TThrowablesArray Throwables;
-	
+
+	UPROPERTY(ReplicatedUsing=OnRep_Throwables)
+	TArray<AThrowableItem*> Throwables;
+
+	UFUNCTION()
+	void OnRep_Loadout();
+
+	UFUNCTION()
+	void OnRep_Throwables();
+
 	bool bReloading = false;
 	bool bChangingEquipment = false;
 

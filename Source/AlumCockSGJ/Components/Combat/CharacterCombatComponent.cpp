@@ -49,7 +49,7 @@ void UCharacterCombatComponent::StartFiring()
 	auto EquippedRangedWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentRangeWeapon();
 	if (IsValid(EquippedRangedWeapon) && CharacterOwner->CanStartAction(ECharacterAction::Shoot))
 	{
-		bool bStarted = EquippedRangedWeapon->TryStartFiring(Controller);
+		bool bStarted = EquippedRangedWeapon->TryStartFiring();
 		if (bStarted)
 		{
 			CharacterOwner->OnActionStarted(ECharacterAction::Shoot);
@@ -60,16 +60,11 @@ void UCharacterCombatComponent::StartFiring()
 void UCharacterCombatComponent::StopFiring()
 {
 	auto EquippedRangedWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentRangeWeapon();
-	if (IsValid(EquippedRangedWeapon) && EquippedRangedWeapon->IsFiring())
+	if (IsValid(EquippedRangedWeapon))
 	{
 		EquippedRangedWeapon->StopFiring();
 		CharacterOwner->OnActionEnded(ECharacterAction::Shoot);
 	}
-}
-
-void UCharacterCombatComponent::OnShot(UAnimMontage* Montage)
-{
-	CharacterOwner->PlayAnimMontage(Montage);
 }
 
 bool UCharacterCombatComponent::CanThrow() const
@@ -257,11 +252,6 @@ void UCharacterCombatComponent::SetMeleeHitRegEnabled(bool bEnabled)
 	auto EquippedMeleeWeapon = CharacterOwner->GetEquipmentComponent()->GetCurrentMeleeWeapon();
 	if (IsValid(EquippedMeleeWeapon) && bMeleeAttack)
 		EquippedMeleeWeapon->SetIsHitRegistrationEnabled(bEnabled);
-}
-
-void UCharacterCombatComponent::OnWeaponPickedUp(ARangeWeaponItem* RangeWeapon)
-{
-	RangeWeapon->ShootEvent.AddUObject(this, &UCharacterCombatComponent::OnShot);
 }
 
 void UCharacterCombatComponent::ResetCharacterCollisionType()

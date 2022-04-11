@@ -44,6 +44,10 @@ public:
 		meta = (ClampMin = 200.f, UIMin = 200.f, EditCondition = "HitRegistrationType == EHitRegistrationType::Projectile"))
 	float ProjectileSpeed = 2000.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly,
+		meta=(ClampMin = 10, ClampMax = 500, UIMin = 10, UIMax = 500, EditCondition = "HitRegistrationType == EHitRegistrationType::Projectile"))
+	int32 ProjectilePoolSize = 10;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SFX")
 	class USoundCue* ShotSound;
 

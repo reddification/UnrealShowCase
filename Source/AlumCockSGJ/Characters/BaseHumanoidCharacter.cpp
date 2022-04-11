@@ -1,6 +1,5 @@
 #include "BaseHumanoidCharacter.h"
 #include "AIController.h"
-#include "DrawDebugHelpers.h"
 #include "Actors/Equipment/Weapons/RangeWeaponItem.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/Character/CharacterEquipmentComponent.h"

@@ -5,11 +5,11 @@
 #include "Characters/BaseHumanoidCharacter.h"
 #include "Characters/Controllers/BasePlayerController.h"
 #include "Components/AudioComponent.h"
-#include "Components/Combat/CharacterCombatComponent.h"
 #include "Components/Combat/WeaponBarrelComponent.h"
 #include "Data/DataAssets/Items/RangeWeaponSettings.h"
 #include "Data/DataAssets/Items/WeaponBarrelSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 ARangeWeaponItem::ARangeWeaponItem()
 {
@@ -46,6 +46,16 @@ void ARangeWeaponItem::BeginPlay()
     AmmoChangedEvent.ExecuteIfBound(ActiveWeaponBarrel->GetAmmo());
 }
 
+void ARangeWeaponItem::RegisterOnClient(UCharacterEquipmentComponent* EquipmentComponent)
+{
+    Super::RegisterOnClient(EquipmentComponent);
+    if (GetLocalRole() == ROLE_AutonomousProxy)
+    {
+        AmmoChangedEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnAmmoChanged);
+        OutOfAmmoEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnOutOfAmmo);
+    }
+}
+
 bool ARangeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* EquipmentComponent, const FPickUpItemData& PickUpItemData)
 {
     auto DesignatedSlot = ItemSettings->DesignatedSlot;
@@ -57,13 +67,16 @@ bool ARangeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* Equipment
 	if (!bAdded)
 		return false;
 
-    EquipmentComponent->CharacterOwner->GetCombatComponent()->OnWeaponPickedUp(this);
     if (PickUpItemData.bDropped)
         SetAmmo(PickUpItemData.InitialAmmo);
 
     EquipmentComponent->Loadout[(uint8)DesignatedSlot] = this;
-    AmmoChangedEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnAmmoChanged);
-    OutOfAmmoEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnOutOfAmmo);
+    if (GetLocalRole() == ROLE_AutonomousProxy || StaticCast<ABaseCharacter*>(EquipmentComponent->GetOwner())->IsLocallyControlled())
+    {
+        AmmoChangedEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnAmmoChanged);
+        OutOfAmmoEvent.BindUObject(EquipmentComponent, &UCharacterEquipmentComponent::OnOutOfAmmo);
+    }
+    
     if (EquipmentComponent->EquipmentSettings->bAutoEquipNewItem || ItemSettings->DesignatedSlot == EquipmentComponent->EquippedSlot)
         EquipmentComponent->EquipItem(ItemSettings->DesignatedSlot);
     
@@ -73,7 +86,7 @@ bool ARangeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* Equipment
 void ARangeWeaponItem::OnEquipped(UCharacterEquipmentComponent* CharacterEquipmentComponent)
 {
     Super::OnEquipped(CharacterEquipmentComponent);
-    CharacterEquipmentComponent->EquippedMeleeWeapon.Reset();
+    CharacterEquipmentComponent->EquippedMeleeWeapon = nullptr;
     CharacterEquipmentComponent->EquippedRangedWeapon = this;
     if (CanAim())
         CharacterEquipmentComponent->AimingSpeedChangedEvent.ExecuteIfBound(GetAimMaxSpeed());
@@ -87,7 +100,7 @@ void ARangeWeaponItem::OnEquipped(UCharacterEquipmentComponent* CharacterEquipme
 void ARangeWeaponItem::OnUnequipped(UCharacterEquipmentComponent* CharacterEquipmentComponent)
 {
     Super::OnUnequipped(CharacterEquipmentComponent);
-    CharacterEquipmentComponent->EquippedRangedWeapon.Reset();
+    CharacterEquipmentComponent->EquippedRangedWeapon = nullptr;
 }
 
 void ARangeWeaponItem::OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem)
@@ -102,6 +115,15 @@ float ARangeWeaponItem::PlaySound(USoundCue* Sound)
     return AudioComponent->Sound->Duration;
 }
 
+void ARangeWeaponItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    FDoRepLifetimeParams ReplicationParams;
+    ReplicationParams.Condition = ELifetimeCondition::COND_SimulatedOnly;
+    ReplicationParams.RepNotifyCondition = ELifetimeRepNotifyCondition::REPNOTIFY_Always;
+    DOREPLIFETIME_WITH_PARAMS(ARangeWeaponItem, ReplicatedShots, ReplicationParams)
+}
+
 EReticleType ARangeWeaponItem::GetReticleType() const
 {
     return bAiming ? ActiveWeaponBarrel->GetWeaponBarrelSettings()->AimReticleType : RangeWeaponSettings->ReticleType;
@@ -109,17 +131,11 @@ EReticleType ARangeWeaponItem::GetReticleType() const
 
 #pragma region SHOOT
 
-bool ARangeWeaponItem::TryStartFiring(AController* ShooterController)
+bool ARangeWeaponItem::TryStartFiring()
 {
     // why not bFiring?
-    if (GetWorld()->GetTimerManager().IsTimerActive(ShootTimer))
-    {
-        return false;
-    }
-
-    CachedShooterController = ShooterController;
-    bFiring = true;
-    return Shoot();
+    bFiring = Shoot();
+    return bFiring;
 }
 
 void ARangeWeaponItem::StopFiring()
@@ -129,6 +145,9 @@ void ARangeWeaponItem::StopFiring()
 
 bool ARangeWeaponItem::Shoot()
 {
+    if (!bCanFire /* || GetWorld()->GetTimerManager().IsTimerActive(ShootTimer)*/)
+        return false;
+    
     int32 Ammo = GetAmmo();
     if (Ammo <= 0)
     {
@@ -150,42 +169,45 @@ bool ARangeWeaponItem::Shoot()
 
     FVector ViewLocation;
     FRotator ViewRotation;
-    CachedShooterController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+    auto ShooterController = CharacterOwner->GetController();
+    ShooterController->GetPlayerViewPoint(ViewLocation, ViewRotation);
     FVector ViewDirection = ViewRotation.Vector();
     auto WeaponBarrelSettings = ActiveWeaponBarrel->GetWeaponBarrelSettings();
+
+    TArray<FShotInfo> ShotsToFire;
+    ShotsToFire.SetNumUninitialized(WeaponBarrelSettings->BulletsPerShot);
     for (auto i = 0; i < WeaponBarrelSettings->BulletsPerShot; i++)
-        ActiveWeaponBarrel->Shoot(ViewLocation, ViewDirection + GetBulletSpreadOffset(ViewRotation), CachedShooterController);
+    {
+        // ActiveWeaponBarrel->Shoot(ViewLocation, ViewDirection + GetBulletSpreadOffset(ViewRotation), CachedShooterController);
+        ShotsToFire[i] = FShotInfo(ViewLocation, ViewDirection + GetBulletSpreadOffset(ViewRotation));
+    }
 
-    if (!ActiveWeaponBarrel->GetWeaponBarrelSettings()->bInfiniteClips)
-        SetAmmo(Ammo - 1);
-
-    PlayAnimMontage(WeaponBarrelSettings->WeaponShootMontage);
-    auto PlayerController = Cast<ABasePlayerController>(CachedShooterController);
-    if (PlayerController)
-        PlayerController->GetPlayerHUDWidget()->OnPlayerShoot(2.0);
+    ShootInternal(ShotsToFire);
+    if (GetLocalRole() == ROLE_AutonomousProxy)
+        Server_Shoot(ShotsToFire);
+    else if (GetLocalRole() == ROLE_Authority)
+        ReplicatedShots = ShotsToFire;
     
-    ActiveWeaponBarrel->FinalizeShot();
-    if (ShootEvent.IsBound())
-        ShootEvent.Broadcast(WeaponBarrelSettings->CharacterShootMontage);
-
-    GetWorld()->GetTimerManager().SetTimer(ShootTimer, this, &ARangeWeaponItem::ResetShot, GetShootTimerInterval(), false);
     return true;
 }
 
 void ARangeWeaponItem::ResetShot()
 {
+    bCanFire = true;
     if (!bFiring)
-    {
         return;
-    }
-
+    
     switch (ActiveWeaponBarrel->GetWeaponBarrelSettings()->FireMode)
     {
     case EWeaponFireMode::Single:
         StopFiring();
         break;
     case EWeaponFireMode::FullAuto:
-        Shoot();
+        {
+            auto ShooterController = CharacterOwner->GetController();
+            if (ShooterController && ShooterController->IsLocalController())
+                Shoot();
+        }
         break;
     default:
         StopFiring();
@@ -214,6 +236,52 @@ float ARangeWeaponItem::GetBulletSpreadAngleRad() const
 {
     const auto WeaponBarrelSettings = ActiveWeaponBarrel->GetWeaponBarrelSettings();
     return FMath::DegreesToRadians(bAiming ? WeaponBarrelSettings->AimSpreadAngle : WeaponBarrelSettings->SpreadAngle);
+}
+
+void ARangeWeaponItem::OnRep_Shots()
+{
+    ShootInternal(ReplicatedShots);
+}
+
+void ARangeWeaponItem::ShootInternal(const TArray<FShotInfo>& ShotInfos)
+{
+    if (!ActiveWeaponBarrel)
+        return;
+
+    auto CachedShooterController = CharacterOwner->GetController();
+    for (const auto& ShotInfo : ShotInfos)
+        ActiveWeaponBarrel->Shoot(ShotInfo.GetLocation(), ShotInfo.GetDirection(), CachedShooterController);
+
+    int32 Ammo = GetAmmo();
+    if (!ActiveWeaponBarrel->GetWeaponBarrelSettings()->bInfiniteClips)
+        SetAmmo(Ammo - 1);
+
+    auto WeaponBarrelSettings = ActiveWeaponBarrel->GetWeaponBarrelSettings();
+    PlayAnimMontage(WeaponBarrelSettings->WeaponShootMontage);
+    
+    if (CachedShooterController && CachedShooterController->IsLocalController())
+    {
+        auto PlayerController = Cast<ABasePlayerController>(CachedShooterController);
+        if (PlayerController)
+            PlayerController->GetPlayerHUDWidget()->OnPlayerShoot(2.0);
+    }
+
+    bCanFire = false;
+    GetWorld()->GetTimerManager().SetTimer(ShootTimer, this, &ARangeWeaponItem::ResetShot, GetShootTimerInterval(), false);
+    
+    ActiveWeaponBarrel->FinalizeShot();
+    CharacterOwner->PlayAnimMontage(WeaponBarrelSettings->CharacterShootMontage);
+}
+
+void ARangeWeaponItem::Server_Shoot_Implementation(const TArray<FShotInfo>& Shots)
+{
+    ShootInternal(Shots);
+}
+
+bool ARangeWeaponItem::Server_Shoot_Validate(const TArray<FShotInfo>& Shots)
+{
+    // TODO also check for fire rate
+    return GetAmmo() > 0; // && !GetWorld()->GetTimerManager().IsTimerActive(ShootTimer);
 }
 
 #pragma endregion SHOOT

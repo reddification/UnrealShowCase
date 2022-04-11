@@ -5,7 +5,6 @@
 
 AExplosiveBulletProjectile::AExplosiveBulletProjectile()
 {
-	bDestroyOnHit = true;
 	bRotate = false;
 
 	ExplosionComponent = CreateDefaultSubobject<UExplosionComponent>(TEXT("Explosion"));
@@ -16,8 +15,8 @@ void AExplosiveBulletProjectile::DestroyOnHit(UPrimitiveComponent* HitComponent,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	ExplosionComponent->Explode(CachedThrowerController.Get());
-	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	StaticMeshComponent->SetVisibility(false);
-	SetLifeSpan(2.f);
-	// Super::DestroyOnHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+	Super::DestroyOnHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+	// CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// StaticMeshComponent->SetVisibility(false);
+	// SetLifeSpan(2.f);
 }

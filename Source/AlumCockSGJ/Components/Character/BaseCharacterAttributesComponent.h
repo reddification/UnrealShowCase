@@ -17,7 +17,8 @@ class ALUMCOCKSGJ_API UBaseCharacterAttributesComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-
+	UBaseCharacterAttributesComponent();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	mutable FAttributeChangedEvent AttributeChangedEvent;
@@ -43,8 +44,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(ReplicatedUsing=OnRep_Health)
 	float Health = 0.f;
+	
 	float Stamina = 0.f;
+	
 	bool bRegeneratingStamina = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -57,6 +61,9 @@ protected:
 
 	virtual float GetStaminaConsumption() const;
 
+	UFUNCTION()
+	virtual void OnRep_Health(float OldHealth);
+	
 private:
 	TWeakObjectPtr<class ABaseCharacter> BaseCharacterOwner;
 	bool CanRestoreStamina() const;

@@ -11,14 +11,42 @@
 #include "Characters/Controllers/BasePlayerController.h"
 #include "Components/DecalComponent.h"
 #include "Data/DataAssets/Items/BarrelSettings.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
 #include "Sound/SoundCue.h"
+
+UBarrelComponent::UBarrelComponent()
+{
+    SetIsReplicatedByDefault(true);
+}
 
 void UBarrelComponent::BeginPlay()
 {
     Super::BeginPlay();
     checkf(IsValid(BarrelSettings), TEXT("BarrelSettings must be set"));
     AudioActorOwner = GetOwner();
+    if (BarrelSettings->HitRegistrationType == EHitRegistrationType::Projectile && IsValid(BarrelSettings->ProjectileClass) && GetOwnerRole() == ROLE_Authority)
+    {
+        ProjectilesPool.Reserve(BarrelSettings->ProjectilePoolSize);
+        for (int i = 0; i < BarrelSettings->ProjectilePoolSize; i++)
+        {
+            FActorSpawnParameters ActorSpawnParameters;
+            ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+            AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(BarrelSettings->ProjectileClass, ProjectilesPoolLocation,
+                FRotator::ZeroRotator, ActorSpawnParameters);
+            Projectile->SetOwner(GetDamagingActor());
+            // Projectile->SetActorEnableCollision(false);
+            Projectile->ProjectileHitEvent.BindUObject(this, &UBarrelComponent::OnProjectileHit);
+            ProjectilesPool.Emplace(Projectile);
+        }
+    }
+}
+
+void UBarrelComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(UBarrelComponent, ProjectilesPool)
+    DOREPLIFETIME(UBarrelComponent, CurrentProjectileIndex)
 }
 
 void UBarrelComponent::Shoot(const FVector& ViewLocation, const FVector& Direction, AController* ShooterController)
@@ -69,23 +97,20 @@ bool UBarrelComponent::ShootHitScan(const FVector& ViewLocation, const FVector& 
         ApplyDamage(ShotResult, Direction, ShooterController);
 
         if (bDrawDebugEnabled)
-        {
             DrawDebugSphere(World, ProjectileEndLocation, 10.f, 24, FColor::Red, false, 2.f);
-        }
 
         SpawnBulletHole(ShotResult);
     }
 
     if (bDrawDebugEnabled)
-    {
         DrawDebugLine(World, ProjectileStartLocation, ProjectileEndLocation, FColor::Red, false, 2.f);
-    }
 
     if (IsValid(BarrelSettings->TraceFX))
     {
         UNiagaraComponent* TraceFXComponent =
             UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), BarrelSettings->TraceFX, ProjectileStartLocation, GetComponentRotation());
-        TraceFXComponent->SetVectorParameter(FXParamTraceEnd, ProjectileEndLocation);
+        if (TraceFXComponent)
+            TraceFXComponent->SetVectorParameter(FXParamTraceEnd, ProjectileEndLocation);
     }
 
     return bHit;
@@ -94,27 +119,48 @@ bool UBarrelComponent::ShootHitScan(const FVector& ViewLocation, const FVector& 
 // TODO shoot via AnimNotify in weapon shoot montage
 bool UBarrelComponent::ShootProjectile(const FVector& ViewLocation, const FVector& ViewDirection, AController* ShooterController)
 {
+#if ENABLE_DRAW_DEBUG
+    bool bDrawDebugEnabled = GetDebugSubsystem()->IsDebugCategoryEnabled(DebugCategoryRangeWeapons);
+#else
+    bool bDrawDebugEnabled = false;
+#endif
+
     CachedShooterController = ShooterController;
     const float ProjectileTraceDistance = 100000.f;
-    // FVector ShootDirection = (ViewLocation + ViewDirection * Range) - GetComponentLocation();
-    AProjectile* CurrentProjectile = GetWorld()->SpawnActor<AProjectile>(BarrelSettings->ProjectileClass, GetComponentLocation(), FRotator::ZeroRotator);
-    CurrentProjectile->SetOwner(GetOwner());
+    AProjectile* CurrentProjectile = ProjectilesPool[CurrentProjectileIndex];
+    CurrentProjectileIndex = (CurrentProjectileIndex + 1) % BarrelSettings->ProjectilePoolSize;
+    
     FHitResult TraceResult;
     const FVector TraceEnd = ViewLocation + ViewDirection * ProjectileTraceDistance;
 
     FCollisionQueryParams CollisionQueryParams;
     CollisionQueryParams.AddIgnoredActor(GetOwner());
     CollisionQueryParams.AddIgnoredActor(GetDamagingActor());
-    CollisionQueryParams.AddIgnoredActor(ShooterController->GetPawn());
+    if (ShooterController)
+        CollisionQueryParams.AddIgnoredActor(ShooterController->GetPawn());
 
     bool bHit = GetWorld()->LineTraceSingleByChannel(TraceResult, ViewLocation, TraceEnd, ECC_Bullet, CollisionQueryParams);
     // DrawDebugLine(GetWorld(), ViewLocation, TraceEnd, FColor::Purple, false, 5, 0, 2);
+    CurrentProjectile->SetActorLocation(GetComponentLocation());
     FVector ShootDirection = bHit || TraceResult.bBlockingHit
                                  ? (TraceResult.ImpactPoint - CurrentProjectile->GetActorLocation()).GetSafeNormal()
                                  : (TraceEnd - CurrentProjectile->GetActorLocation()).GetSafeNormal();
-    // : (TraceEnd - ViewLocation).GetSafeNormal();
+
+    if (bDrawDebugEnabled)
+    {
+        DrawDebugLine(GetWorld(), ViewLocation, TraceEnd, FColor::Orange, false, 5.f);
+        DrawDebugLine(GetWorld(), GetComponentLocation(),
+            GetComponentLocation() + ShootDirection * BarrelSettings->ProjectileSpeed, FColor::Blue, false, 5.f);
+        if (bHit || TraceResult.bBlockingHit)
+        DrawDebugSphere(GetWorld(), TraceResult.ImpactPoint, 10.f, 24, FColor::Orange, false, 2.f);
+    }
+    
     CurrentProjectile->SetActorRotation(ShootDirection.ToOrientationRotator());
-    CurrentProjectile->ProjectileHitEvent.BindUObject(this, &UBarrelComponent::OnProjectileHit);
+    // : (TraceEnd - ViewLocation).GetSafeNormal();
+  
+    // CurrentProjectile->SetActorEnableCollision(true);
+    if (!CurrentProjectile->ProjectileHitEvent.IsBoundToObject(this))
+        CurrentProjectile->ProjectileHitEvent.BindUObject(this, &UBarrelComponent::OnProjectileHit);
 
     CurrentProjectile->LaunchProjectile(ShootDirection, GetOwner()->GetVelocity().Size() + BarrelSettings->ProjectileSpeed, ShooterController);
     return true;
@@ -122,16 +168,24 @@ bool UBarrelComponent::ShootProjectile(const FVector& ViewLocation, const FVecto
 
 void UBarrelComponent::OnProjectileHit(const FHitResult& HitResult, const FVector& Direction)
 {
-    if (CachedShooterController.IsValid())
-    {
+    if (IsValid(CachedShooterController))
         ApplyDamage(HitResult, Direction, CachedShooterController.Get());
-    }
 
     SpawnBulletHole(HitResult);
 }
 
+void UBarrelComponent::OnProjectileHit(AProjectile* Projectile, const FHitResult& HitResult, const FVector& Direction)
+{
+    OnProjectileHit(HitResult, Direction);
+    // Projectile->SetActorEnableCollision(false);
+    Projectile->SetActorLocation(ProjectilesPoolLocation);
+}
+
 void UBarrelComponent::ApplyDamage(const FHitResult& ShotResult, const FVector& Direction, AController* ShooterController) const
 {
+    if (GetOwner()->GetLocalRole() < ROLE_AutonomousProxy)
+        return;
+
     AActor* HitActor = ShotResult.GetActor();
     // Perhaps its better to use squared distance
     // TODO do something for projectiles
@@ -145,6 +199,8 @@ void UBarrelComponent::ApplyDamage(const FHitResult& ShotResult, const FVector& 
         DamageEvent.HitInfo = ShotResult;
         DamageEvent.ShotDirection = Direction;
         DamageEvent.DamageTypeClass = BarrelSettings->DamageTypeClass;
+        DamageEvent.Damage = Damage;
+        
         HitActor->TakeDamage(Damage, DamageEvent, ShooterController, GetDamagingActor());
     }
 }

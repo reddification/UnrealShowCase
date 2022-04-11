@@ -16,7 +16,7 @@ void AMeleeWeaponItem::BeginPlay()
 void AMeleeWeaponItem::OnEquipped(UCharacterEquipmentComponent* CharacterEquipmentComponent)
 {
 	Super::OnEquipped(CharacterEquipmentComponent);
-	CharacterEquipmentComponent->EquippedRangedWeapon.Reset();
+	CharacterEquipmentComponent->EquippedRangedWeapon = nullptr;
 	CharacterEquipmentComponent->EquippedMeleeWeapon = this;
 	CharacterEquipmentComponent->AimingSpeedResetEvent.ExecuteIfBound();
 	CharacterEquipmentComponent->MeleeWeaponEquippedEvent.ExecuteIfBound();
@@ -25,7 +25,7 @@ void AMeleeWeaponItem::OnEquipped(UCharacterEquipmentComponent* CharacterEquipme
 void AMeleeWeaponItem::OnUnequipped(UCharacterEquipmentComponent* CharacterEquipmentComponent)
 {
 	Super::OnUnequipped(CharacterEquipmentComponent);
-	CharacterEquipmentComponent->EquippedMeleeWeapon.Reset();
+	CharacterEquipmentComponent->EquippedMeleeWeapon = nullptr;
 }
 
 bool AMeleeWeaponItem::TryAddToEquipment(UCharacterEquipmentComponent* EquipmentComponent,

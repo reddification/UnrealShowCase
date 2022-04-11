@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Actors/Projectiles/Projectile.h"
 
 #include "CommonConstants.h"
@@ -13,9 +10,9 @@ AProjectile::AProjectile()
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
 	
 	SetRootComponent(CollisionComponent);
-	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	// CollisionComponent->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+	CollisionComponent->SetCollisionProfileName(ProfileNoCollision);
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovementComponent->InitialSpeed = 2000.f;
 	ProjectileMovementComponent->bSimulationEnabled = false;
 	AddOwnedComponent(ProjectileMovementComponent);
 
@@ -25,6 +22,9 @@ AProjectile::AProjectile()
 	
 	RotatingMovementComponent = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement"));
 	AddOwnedComponent(RotatingMovementComponent);
+	SetReplicates(true);
+	// bReplicates = 1;
+	// bAlwaysRelevant = 1;
 }
 
 void AProjectile::BeginPlay()
@@ -40,6 +40,11 @@ void AProjectile::BeginPlay()
 		ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &AProjectile::OnProjectileStopped);
 		ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &AProjectile::OnProjectileBounced);
 	}
+}
+
+void AProjectile::Activate(AController* ThrowerController)
+{
+	CachedThrowerController = ThrowerController;
 }
 
 void AProjectile::LaunchProjectile(FVector Direction, float Speed, AController* ThrowerController)
@@ -80,7 +85,7 @@ void AProjectile::Drop(AController* ThrowerController)
 void AProjectile::DestroyOnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	ProjectileHitEvent.ExecuteIfBound(Hit, ProjectileMovementComponent->Velocity.GetSafeNormal());
+	ProjectileHitEvent.ExecuteIfBound(this, Hit, ProjectileMovementComponent->Velocity.GetSafeNormal());
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	StaticMeshComponent->SetVisibility(false);
 	SetLifeSpan(2.f); 	

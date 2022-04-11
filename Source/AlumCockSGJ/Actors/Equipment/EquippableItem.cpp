@@ -7,6 +7,16 @@
 AEquippableItem::AEquippableItem()
 {
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetReplicates(true);
+}
+
+void AEquippableItem::SetOwner(AActor* NewOwner)
+{
+	Super::SetOwner(NewOwner);
+	if (IsValid(NewOwner) && GetLocalRole() == ROLE_Authority)
+		SetAutonomousProxy(true);
+
+	CharacterOwner = Cast<ABaseCharacter>(NewOwner);
 }
 
 void AEquippableItem::BeginPlay()
@@ -62,4 +72,9 @@ const FText& AEquippableItem::GetName()
 void AEquippableItem::OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem)
 {
 	PickableEquipmentItem->SetDroppedState(0);
+}
+
+void AEquippableItem::RegisterOnClient(UCharacterEquipmentComponent* EquipmentComponent)
+{
+	
 }

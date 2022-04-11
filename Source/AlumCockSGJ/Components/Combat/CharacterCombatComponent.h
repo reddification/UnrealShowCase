@@ -37,7 +37,6 @@ public:
 	bool IsAiming() const { return bAiming; }
 
 	void SetMeleeHitRegEnabled(bool bEnabled);
-	void OnWeaponPickedUp(ARangeWeaponItem* RangeWeapon);
 	mutable FAimingStateChangedEvent AimStateChangedEvent;
 	
 protected:
@@ -53,7 +52,6 @@ private:
 	bool bThrowing = false;
 	bool bAiming = false;
 	bool bMeleeAttack = false;
-	void OnShot(UAnimMontage* Montage);
 	FTimerHandle ThrowTimer;
 	FTimerHandle ResetCollisionTimer;
 	FTimerHandle MeleeAttackTimer;

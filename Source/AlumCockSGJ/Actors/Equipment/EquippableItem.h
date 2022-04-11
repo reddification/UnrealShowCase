@@ -37,7 +37,7 @@ public:
 	const FText& GetName();
 
 	virtual void OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem);
-	
+
 	virtual EAmmunitionType GetAmmoType() const { return EAmmunitionType::None; }
 	
 	virtual bool TryAddToEquipment(class UCharacterEquipmentComponent* EquipmentComponent, const FPickUpItemData& PickUpItemData);	
@@ -53,6 +53,9 @@ public:
 	const FDataTableRowHandle& GetWeaponDTRH() const { return EquipableItemDTRH; }
 	EEquipmentSlot GetDesignatedSlot() const { return ItemSettings ? ItemSettings->DesignatedSlot : EEquipmentSlot::None; }
 
+	virtual void SetOwner(AActor* NewOwner) override;
+	virtual void RegisterOnClient(UCharacterEquipmentComponent* EquipmentComponent);
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -61,4 +64,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(RowType="WeaponDTR"))
 	FDataTableRowHandle EquipableItemDTRH;
+
+	TObjectPtr<class ABaseCharacter> CharacterOwner;
 };

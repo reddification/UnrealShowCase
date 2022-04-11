@@ -102,6 +102,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual float PlaySound(class USoundCue* Sound) override;
+
+	float PlayAnimMontageWithDuration(UAnimMontage* Montage, float DesiredDuration) const;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -144,8 +146,6 @@ protected:
 	virtual void ReactToDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 		AController* InstigatedBy, AActor* DamageCauser);
 	virtual void SetStrafingControlsState(bool bStrafing);
-
-	float PlayAnimMontageWithDuration(UAnimMontage* Montage, float DesiredDuration) const;
 	
 	float CurrentInputForward = 0.f;
 	float CurrentInputRight = 0.f;

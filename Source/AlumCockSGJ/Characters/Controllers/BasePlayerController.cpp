@@ -5,7 +5,6 @@
 #include "Actors/Equipment/Weapons/RangeWeaponItem.h"
 #include "Characters/BaseHumanoidCharacter.h"
 #include "GameFramework/GameModeBase.h"
-#include "Game/MLGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/PlayerCharacter.h"
 #include "Components/ObservationSourceComponent.h"
@@ -456,7 +455,7 @@ void ABasePlayerController::StopFiring()
 void ABasePlayerController::UnequipWeapon()
 {
     if (IsValid(PlayerCharacter))
-        PlayerCharacter->GetEquipmentComponent()->UnequipItem();
+        PlayerCharacter->GetEquipmentComponent()->UnequipItem(false);
 }
 
 void ABasePlayerController::EquipPrimaryWeapon()
@@ -831,5 +830,6 @@ void ABasePlayerController::OnItemPickedUp(const FDataTableRowHandle& ItemDTRH)
 
 void ABasePlayerController::OnCharacterDied(const ABaseCharacter* BaseCharacter)
 {
-    GameHUD->ChangeGameState(EMLGameState::GameOver);    
+    if (IsLocalController())
+        GameHUD->ChangeGameState(EMLGameState::GameOver);    
 }

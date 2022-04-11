@@ -14,8 +14,28 @@
 
 class UAnimMontage;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FShootEvent, UAnimMontage* CharacterShootMontage)
 DECLARE_DELEGATE(FOutOfAmmoEvent)
+
+USTRUCT(BlueprintType)
+struct FShotInfo
+{
+	GENERATED_BODY()
+
+public:
+	FShotInfo(const FVector& Location, const FVector& Direction) : Location_x10(Location * 10.f), Direction(Direction) { }
+	FShotInfo() :Location_x10(FVector_NetQuantize100::ZeroVector), Direction(FVector_NetQuantizeNormal::ZeroVector) { }
+
+	FVector GetLocation() const { return Location_x10 * 0.1f; }
+	FVector GetDirection() const { return Direction; }
+    
+private:
+	UPROPERTY()
+	FVector_NetQuantize100 Location_x10;
+
+	UPROPERTY()
+	FVector_NetQuantizeNormal Direction;
+};
+
 
 class UAnimMontage;
 
@@ -27,7 +47,7 @@ class ALUMCOCKSGJ_API ARangeWeaponItem : public AEquippableItem, public IAudioAc
 public:
 	ARangeWeaponItem();
 
-	bool TryStartFiring(AController* ShooterController);
+	bool TryStartFiring();
 	void StopFiring();
 
 	bool StartAiming();
@@ -54,7 +74,6 @@ public:
 	bool IsInfiniteClip() const { return ActiveWeaponBarrel->GetWeaponBarrelSettings()->bInfiniteClips; }
 	virtual EAmmunitionType GetAmmoType() const override { return PrimaryWeaponBarrelComponent->GetWeaponBarrelSettings()->AmmunitionType; }
 
-	mutable FShootEvent ShootEvent;
 	mutable FAmmoChangedEvent AmmoChangedEvent;
 	mutable FOutOfAmmoEvent OutOfAmmoEvent;
 	
@@ -83,7 +102,11 @@ public:
 	virtual void OnDropped(UCharacterEquipmentComponent* EquipmentComponent, APickableEquipmentItem* PickableEquipmentItem) override;
 
 	virtual float PlaySound(USoundCue* Sound) override;
-	
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void RegisterOnClient(UCharacterEquipmentComponent* EquipmentComponent) override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -109,10 +132,8 @@ private:
 	bool bAiming = false;
 	bool bReloading = false;
 	bool bFiring = false;
+	bool bCanFire = true;
 	bool bChangingFireMode = false;
-
-	UPROPERTY()
-	class AController* CachedShooterController = nullptr;
 
 	float PlayAnimMontage(UAnimMontage* AnimMontage, float DesiredDuration = -1);
 	float GetShootTimerInterval() const { return 60.f / ActiveWeaponBarrel->GetWeaponBarrelSettings()->FireRate; };
@@ -125,8 +146,21 @@ private:
 	UPROPERTY()
 	TArray<UWeaponBarrelComponent*> Barrels;
 	
-	TWeakObjectPtr<UWeaponBarrelComponent> ActiveWeaponBarrel;
+	TObjectPtr<UWeaponBarrelComponent> ActiveWeaponBarrel;
 	int ActiveBarrelIndex = 0;
 
-	TWeakObjectPtr<const class URangeWeaponSettings> RangeWeaponSettings;
+	TObjectPtr<const class URangeWeaponSettings> RangeWeaponSettings;
+
+	UPROPERTY(ReplicatedUsing=OnRep_Shots)
+	TArray<FShotInfo> ReplicatedShots;
+
+	UFUNCTION()
+	void OnRep_Shots();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Shoot(const TArray<FShotInfo>& Shots);
+
+	bool Server_Shoot_Validate(const TArray<FShotInfo>& Shots);
+	
+	void ShootInternal(const TArray<FShotInfo>& Shots);
 };

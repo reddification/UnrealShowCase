@@ -5,6 +5,18 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Interfaces/KillConsiderate.h"
+#include "Net/UnrealNetwork.h"
+
+UBaseCharacterAttributesComponent::UBaseCharacterAttributesComponent()
+{
+    SetIsReplicatedByDefault(true);
+}
+
+void UBaseCharacterAttributesComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(UBaseCharacterAttributesComponent, Health)
+}
 
 void UBaseCharacterAttributesComponent::TickComponent(float DeltaTime, ELevelTick Tick, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -38,9 +50,8 @@ bool UBaseCharacterAttributesComponent::TryChangeHealth(float Delta)
     Health = NewHealth;
     CurrentHealth = Health;
     if (AttributeChangedEvent.IsBound())
-    {
         AttributeChangedEvent.Broadcast(ECharacterAttribute::Health, Health / AttributesSettings->MaxHealth);
-    }
+    
     return true;
 }
 
@@ -136,6 +147,13 @@ void UBaseCharacterAttributesComponent::UpdateStamina(float DeltaTime)
 float UBaseCharacterAttributesComponent::GetStaminaConsumption() const
 {
     return 0.f;
+}
+
+void UBaseCharacterAttributesComponent::OnRep_Health(float OldHealth)
+{
+    AttributeChangedEvent.Broadcast(ECharacterAttribute::Health, Health / AttributesSettings->MaxHealth);
+    if (Health <= 0.f && OutOfHealthEvent.IsBound())
+        OutOfHealthEvent.Broadcast();
 }
 
 void UBaseCharacterAttributesComponent::ChangeStaminaValue(float StaminaModification)

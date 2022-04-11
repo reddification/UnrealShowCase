@@ -34,30 +34,24 @@ ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
 	AudioComponent->SetupAttachment(GetMesh(), "head");
 }
 
-FCharacterInteractionParameters ABaseCharacter::GetInteractionParameters(const FGameplayTag& InteractionTag) const
-{
-	FCharacterInteractionParameters Result;
-	UCharacterInteractionOptions* MainInteractionOptions = GetInteractionOptions();
-	if (!MainInteractionOptions)
-		return Result;
-
-	auto Options = MainInteractionOptions->InteractionMontages.Find(InteractionTag);
-	if (!Options || Options->Montages.Num() <= 0)
-		return Result;
-	
-	Result.CharacterInteractionOptionIndex = FMath::RandRange(0, Options->Montages.Num() - 1);
-	Result.InteractionMontage = Options->Montages[Result.CharacterInteractionOptionIndex];
-	return Result;
-}
-
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		int x = 1;
+	}
+	else if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		int z = 1;
+	}
+	
     checkf(IsValid(CharacterSettings), TEXT("Character settings DataAsset must be set"));
-    CharacterAttributesComponent->OutOfHealthEvent.AddUObject(this, &ABaseCharacter::OnOutOfHealth);
+	if (HasAuthority() || IsLocallyControlled())
+		OnTakeAnyDamage.AddDynamic(CharacterAttributesComponent, &UBaseCharacterAttributesComponent::OnTakeAnyDamage);
 
-    OnTakeAnyDamage.AddDynamic(CharacterAttributesComponent, &UBaseCharacterAttributesComponent::OnTakeAnyDamage);
-    OnTakeAnyDamage.AddDynamic(this, &ABaseCharacter::ReactToDamage);
+    CharacterAttributesComponent->OutOfHealthEvent.AddUObject(this, &ABaseCharacter::OnOutOfHealth);
+	OnTakeAnyDamage.AddDynamic(this, &ABaseCharacter::ReactToDamage);
     CreateLoadout();
 }
 
@@ -88,7 +82,6 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 	}
 }
 
-
 FRotator ABaseCharacter::GetAimOffset() const
 {
 	FVector AimDirectionWorld = GetBaseAimRotation().Vector();
@@ -109,7 +102,6 @@ void ABaseCharacter::CreateLoadout()
     CharacterEquipmentComponent->CreateLoadout();
     bIsLoadoutCreated=true;
 }
-
 
 void ABaseCharacter::OnOutOfHealth()
 {
@@ -155,8 +147,15 @@ void ABaseCharacter::ReactToDamage(AActor* DamagedActor, float Damage, const UDa
 	AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (!CharacterAttributesComponent->IsAlive())
-	{
 		return;
+
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		int x = 1;
+	}
+	else if (GetLocalRole() == ROLE_AutonomousProxy)
+	{
+		int z = 1;
 	}
 	
 	if (CharacterSettings->HitReactionMontages.Num() > 0)
@@ -371,6 +370,22 @@ void ABaseCharacter::SpawnItems(const TArray<FSpawnItemDescription>& SpawnItemsL
 void ABaseCharacter::SpawnItemsOnDeath()
 {
 	SpawnItems(SpawnItemsAfterDeath);
+}
+
+FCharacterInteractionParameters ABaseCharacter::GetInteractionParameters(const FGameplayTag& InteractionTag) const
+{
+	FCharacterInteractionParameters Result;
+	UCharacterInteractionOptions* MainInteractionOptions = GetInteractionOptions();
+	if (!MainInteractionOptions)
+		return Result;
+
+	auto Options = MainInteractionOptions->InteractionMontages.Find(InteractionTag);
+	if (!Options || Options->Montages.Num() <= 0)
+		return Result;
+	
+	Result.CharacterInteractionOptionIndex = FMath::RandRange(0, Options->Montages.Num() - 1);
+	Result.InteractionMontage = Options->Montages[Result.CharacterInteractionOptionIndex];
+	return Result;
 }
 
 #pragma region TAGS

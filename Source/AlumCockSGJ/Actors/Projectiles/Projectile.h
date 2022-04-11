@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,7 +7,7 @@
 class UProjectileMovementComponent;
 class USphereComponent;
 
-DECLARE_DELEGATE_TwoParams(FProjectileHitEvent, const FHitResult& HitResult, const FVector& ShotDirection);
+DECLARE_DELEGATE_ThreeParams(FProjectileHitEvent, class AProjectile* Projectile, const FHitResult& HitResult, const FVector& ShotDirection);
 
 UCLASS()
 class ALUMCOCKSGJ_API AProjectile : public AActor
@@ -21,11 +19,11 @@ public:
 
 	mutable FProjectileHitEvent ProjectileHitEvent;
 
-	void LaunchProjectile(FVector Direction, float Speed, AController* ThrowerController);
+	virtual void LaunchProjectile(FVector Direction, float Speed, AController* ThrowerController);
 	
-	virtual void Activate(AController* ThrowerController) { CachedThrowerController = ThrowerController; }
+	virtual void Activate(AController* ThrowerController);
 	void Drop(AController* ThrowerController);
-
+	
 protected:
 	virtual void BeginPlay() override;
 	
