@@ -36,6 +36,8 @@ public:
 	ETeam GetTeam() const { return Team; }
 
 	mutable FDeathEvent DeathEvent;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -100,8 +102,13 @@ private:
 	float GetFireInterval() const { return 60.f / FireRate; }
 
 	void Shoot();
+
+	UPROPERTY(ReplicatedUsing=OnRep_Target)
+	AActor* Target = nullptr;
+
+	UFUNCTION()
+	void OnRep_Target();
 	
-	TWeakObjectPtr<AActor> Target = nullptr;
 	IKillable* KillableTarget = nullptr;
 	
 	FTimerHandle ShootDelayTimer;

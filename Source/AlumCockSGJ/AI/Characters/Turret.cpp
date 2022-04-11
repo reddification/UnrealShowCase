@@ -3,6 +3,7 @@
 #include "GenericTeamAgentInterface.h"
 #include "Components/Combat/ExplosionComponent.h"
 #include "Components/Combat/TurretBarrelComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Damage.h"
 
 ATurret::ATurret()
@@ -23,6 +24,7 @@ ATurret::ATurret()
 
 	ExplosionComponent = CreateDefaultSubobject<UExplosionComponent>(TEXT("Explosion"));
 	ExplosionComponent->SetupAttachment(RootComponent);
+	SetReplicates(true);
 }
 
 void ATurret::Tick(float DeltaTime)
@@ -42,16 +44,20 @@ void ATurret::Tick(float DeltaTime)
 	}
 }
 
+void ATurret::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATurret, Target)
+}
+
 void ATurret::SetCurrentTarget(AActor* NewTarget)
 {
 	if (Health <= 0)
-	{
 		return;
-	}
 	
 	Target = NewTarget;
 	KillableTarget = Cast<IKillable>(NewTarget);
-	SetMode(Target.IsValid() ? ETurretMode::Attack : ETurretMode::Search);
+	SetMode(IsValid(Target) ? ETurretMode::Attack : ETurretMode::Search);
 }
 
 FVector ATurret::GetPawnViewLocation() const
@@ -96,7 +102,7 @@ void ATurret::Search(float DeltaTime)
 
 void ATurret::Track(float DeltaTime)
 {
-	if (!Target.IsValid())
+	if (!IsValid(Target))
 	{
 		SetCurrentTarget(nullptr);
 		return;
@@ -143,8 +149,17 @@ void ATurret::Shoot()
 	}
 }
 
+void ATurret::OnRep_Target()
+{
+	if (!IsValid(Target))
+		return;
+
+	KillableTarget = Cast<IKillable>(Target);
+	SetMode(IsValid(Target) ? ETurretMode::Attack : ETurretMode::Search);
+}
+
 void ATurret::OnDamageTaken(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatedBy, AActor* DamageCauser)
+                            AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (Health < 0)
 	{
